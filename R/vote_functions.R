@@ -28,7 +28,9 @@ approval <- function(votes, mcan=NULL, fsep='\t') {
 }
 
 summary.vote.approval <- function(object) {
-  
+  df <- data.frame(rev(sort(object$totals[])
+  class(df) <- c('summary.vote.stv', class(df))
+  return(df)
 }
 
 check.votes.approval <- function(record) {
