@@ -5,5 +5,6 @@ Version: 1.0
 Date: 2017-02-09
 Author: Bernard Silverman, Hana Sevcikova, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
-Description: Counting votes via different methods, including single transferable votes or approval voting. 
+Description: Counting votes via different methods, including single transferable votes or approval voting.
+Imports: formattable
 License: GPL (>=2)
