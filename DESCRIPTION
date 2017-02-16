@@ -3,8 +3,8 @@ Type: Package
 Title: Vote Counting
 Version: 1.0
 Date: 2017-02-09
-Author: Bernard Silverman, Hana Sevcikova, Adrian Raftery
+Author: Hana Sevcikova, Bernard Silverman, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
 Description: Counting votes via different methods, including single transferable votes or approval voting.
-Imports: formattable
+Imports: formattable, knitr
 License: GPL (>=2)

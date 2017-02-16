@@ -1,4 +1,4 @@
-stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE) {
+stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -23,7 +23,9 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE) {
 	# The program was written by Bernard Silverman for the IMS in August 2002
 	##################################
 	
-	
+  cat("\nSingle transferable vote count")
+  cat("\n==============================\n")
+  
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
 	
@@ -51,21 +53,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE) {
 	x <- check.votes(x, "stv", nc=nc)
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)
-	cat("Number of valid votes is", nvotes, "\n")
-	#
-	# Calculate results under old counting system
-	#
-	
-	# if(oldcount) {
-	# 	vtot <- apply(x <= mcan & x != 0, 2, sum)
-	# 	names(vtot) <- cnames
-	# 	cat("\nUnder old counting system totals would be\n")
-	# 	print(rev(sort(vtot)))
-	# }
 	
 	# initialize results
-	result.pref <- result.elect <- result.elim <- matrix(NA, ncol=nc, nrow=0, 
-	                                                     dimnames=list(NULL, cnames))
+	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
+	                                       dimnames=list(NULL, cnames))
 	result.quota <- c()
 	
 	#
@@ -84,6 +75,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE) {
 		quota <- sum(vcast)/(mcan + 1) + eps
 		result.quota <- c(result.quota, quota)
 		result.pref <- rbind(result.pref, vcast)
+		result.elect <- rbind(result.elect, rep(0,nc))
 		if(verbose) {
 			cat("\nCount:" , count, "\n")
 		  df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
@@ -101,18 +93,14 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE) {
 			w[index] <- (w[index] * (vmax - quota))/vmax
 			mcan <- mcan - 1
 			elected <- c(elected, cnames[ic])
-			result.elect <- rbind(result.elect, rep(FALSE, nc))
-			result.elect[nrow(result.elect),ic] <- TRUE
-			rownames(result.elect)[nrow(result.elect)] <- count
+			result.elect[count,ic] <- 1
 			if(verbose) cat("Candidate", cnames[ic], "elected \n")
 		} else {
 			#
 			# if no candidate reaches quota, mark lowest candidate for elimination
 			vmin <- min(vcast[vcast > 0])
 			ic <- min((1:nc)[vcast == vmin])
-			result.elim <- rbind(result.elim, rep(FALSE, nc))
-			result.elim[nrow(result.elim),ic] <- TRUE
-			rownames(result.elim)[nrow(result.elim)] <- count
+			result.elect[count,ic] <- -1
 			if(verbose) cat("Candidate", cnames[ic], "eliminated \n")
 		}
 		for(i in (1:nvotes)) {
@@ -127,54 +115,55 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE) {
 	rownames(result.pref) <- 1:count
 	cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
 	invisible(structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
-	               elect=result.elect, elim=result.elim), class="vote.stv"))
+	               elect.elim=result.elect, data=x), class="vote.stv"))
 }
 
 summary.vote.stv <- function(object) {
   ncounts <- nrow(object$preferences)
-  df <- data.frame(matrix(NA, ncol=ncol(object$preferences)+5, nrow=2*ncounts-1),
+  df <- data.frame(matrix(NA, nrow=ncol(object$preferences)+3, ncol=2*ncounts-1),
                    stringsAsFactors = FALSE)
-  colnames(df) <- c("Count", "Quota", "Type", colnames(object$preferences), "Elected", "Eliminated")
-  idxrows <- c(1, seq(3,nrow(df), by=2))
-  df[,"Count"] <- c(1, rep(2:ncounts, each=2))
-  df[idxrows,"Quota"] <- round(object$quotas,3)
-  df[c(1,seq(3,nrow(df), by=2)),4:(ncol(df)-2)] <- object$preferences
+  rownames(df) <- c("Quota", colnames(object$preferences), "Elected", "Eliminated")
+  colnames(df) <- c(1, paste0(rep(2:ncounts, each=2), c("-trans", "")))
+  idxcols <- c(1, seq(3,ncol(df), by=2))
+  df["Quota", idxcols] <- round(object$quotas,3)
+  df[2:(nrow(df)-2), idxcols] <- round(t(object$preferences),3)
   # calculate transfers
   pref <- object$preferences
   # remove quotas for winners and compute difference
-  pref[rownames(object$elect),] <- pref[rownames(object$elect),] - object$elect*object$quotas[as.integer(rownames(object$elect))]
-  df[seq(2,nrow(df), by=2),4:(ncol(df)-2)] <- round(
-      object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], 3)
-  df[,"Type"] <- c("Total",rep(c("Transfer", "Total"), ncounts-1))
+  where.winner <- which(rowSums(object$elect.elim==1)==1)
+  pref[where.winner,] <- pref[where.winner,] - object$elect.elim[where.winner,]*object$quotas[where.winner]
+  df[2:(nrow(df)-2), seq(2,ncol(df), by=2)] <- t(round(
+      object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], 3))
+  where.elim <- which(rowSums(object$elect.elim==-1)==1)
+  cnames <- colnames(object$elect.elim)
   for(i in 1:ncounts) {
-    ichar <- as.character(i)
-    if (ichar %in% rownames(object$elect)) {
-      elected <- colnames(object$elect)[object$elect[ichar,]]
-      df[idxrows[i],"Elected"] <- paste(elected, collapse=", ")
+    if (i %in% where.winner) {
+      elected <- cnames[which(object$elect.elim[i,]==1)]
+      df["Elected", idxcols[i]] <- paste(elected, collapse=", ")
     }
-    if (ichar %in% rownames(object$elim)) {
-      eliminated <- colnames(object$elim)[object$elim[ichar,]]
-      df[idxrows[i],"Eliminated"] <- paste(eliminated, collapse=", ")
+    if (i %in%  where.elim) {
+      eliminated <-cnames[which(object$elect.elim[i,]==-1)]
+      df["Eliminated", idxcols[i]] <- paste(eliminated, collapse=", ")
     }
   }
   df[is.na(df)] <- ""
   class(df) <- c('summary.vote.stv', class(df))
+  attr(df, "number.of.votes") <- nrow(object$data)
   return(df)
 }
 
 print.summary.vote.stv <- function(x, ...) {
-  print(knitr::kable(x, ...))
-  cat("\nElected:", paste(x$Elected[x$Elected != ""], collapse=", "), "\n")
+  cat("\nSingle transferable vote count")
+  cat("\n==============================")
+  cat("\nNumber of valid votes: ", attr(x, "number.of.votes"))
+  print(kable(x, align='r', ...))
+  #cat("\nElected:", paste(x$Elected[x$Elected != ""], collapse=", "), "\n\n")
+  cat("\nElected:", paste(x['Elected', x['Elected',] != ""], collapse=", "), "\n\n")
 }
 
 "view" <- function(object, ...) UseMethod("view")
 view.vote.stv <- function(object, ...) {
  s <- summary(object)
- formatter <- list(area(col=4:(ncol(s)-2), row=c(1,seq(3,nrow(s), by=2))) ~ color_text("red", "red"))
+ formatter <- list(area(row=2:(nrow(s)-2), col=seq(1,ncol(s), by=2)) ~ color_text("red", "red"))
  formattable(s, formatter, ...)
-}
-
-check.votes.stv <- function(record, nc) {
-  z <- sort(diff(c(0, diff(sort(c(0, record))), 1)))
-  return(z[nc] == 0 && z[nc + 1] == 1)
 }

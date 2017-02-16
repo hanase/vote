@@ -3,22 +3,19 @@
 \alias{vote}
 \docType{package}
 \title{
-\packageTitle{vote}
+Vote Counting
 }
 \description{
-\packageDescription{vote}
+Counting votes via different methods, including single transferable votes or approval voting.
 }
 \details{
 
-The DESCRIPTION file:
-\packageDESCRIPTION{vote}
-\packageIndices{vote}
-~~ An overview of how to use the package, including the most important functions ~~
+
 }
 \author{
-\packageAuthor{vote}
+Hana Sevcikova, Bernard Silverman, Adrian Raftery
 
-Maintainer: \packageMaintainer{vote}
+Maintainer: Hana Sevcikova
 }
 \references{
 

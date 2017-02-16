@@ -1,5 +1,9 @@
 \name{stv}
 \alias{stv}
+\alias{summary.vote.stv}
+\alias{view.vote.stv}
+\alias{print.summary.vote.stv}
+
 \title{
 Single Transferable Vote
 }
@@ -7,39 +11,50 @@ Single Transferable Vote
 Count votes using the single transferable voting method.
 }
 \usage{
-stv(x, mcan = NULL, oldcount = FALSE, verbose = TRUE)
+stv(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, \dots)
+
+\method{summary}{vote.stv}(object, \dots)
+
+\method{view}{vote.stv}(object, \dots)
 }
 
 \arguments{
-  \item{x}{Matrix containing the votes. If it is a character string it is interpreted as a tab-separated file name from which the
-	votes are to be read. See below for details.}
+  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a tab-separated file name from which the votes are to be read. See below for more details.}
   \item{mcan}{Number of candidates to be elected. By default it is half the number of candidates standing.}
-  \item{oldcount}{Logical. If it is \code{TRUE} the function will also count votes under a system that gives one vote to each of the first \code{mcan}
-	preferences for each voter which will be then summed up.}
+  \item{eps}{Value added to the quota. I.e. the STV quota is computed as \code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
+  \item{fsep}{If \code{votes} is a filename, this argument gives the column separator in the file.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
+  \item{\dots}{Not used.}
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+For details on single transferable vote see e.g. \url{imstat.org/elections/stvprocess.htm}.
+
+The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros.
+}
+
+\value{
+Function \code{stv} returns an object of class \code{vote.stv} which is a list with the following objects:
+\item{elected}{Vector of names of the elected candidates in the order in which they were elected.}
+\item{preferences}{Matrix of preferences. Columns correspond to the candidates and rows to the counts (i.e. voting rounds).}
+\item{quotas}{Vector of quotas, one for each count.}
+\item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
+\item{data}{Input data with invalid votes removed.}
 }
 
 \references{
-%% ~put references to the literature/web site here ~
+\url{imstat.org/elections/stvprocess.htm}, \url{https://en.wikipedia.org/wiki/Single_transferable_vote}
 }
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Bernard Silverman, Hana Sevcikova, Adrian Raftery
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
+  data(food_election)
+  stv.res <- stv(food_election, mcan = 3)
+  summary(stv.res)
+  \dontrun{view(stv.res)}
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
+\keyword{tools }% use one of  RShowDoc("KEYWORDS")
+
