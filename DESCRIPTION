@@ -1,10 +1,10 @@
 Package: vote
 Type: Package
-Title: Vote Counting
+Title: Election Vote Counting
 Version: 1.0
 Date: 2017-02-09
 Author: Hana Sevcikova, Bernard Silverman, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
-Description: Counting votes via different methods, including single transferable votes or approval voting.
+Description: Counting election votes via different methods, including single transferable votes, approval, score and plurality voting.
 Imports: formattable, knitr
 License: GPL (>=2)

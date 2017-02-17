@@ -29,9 +29,9 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
 	
-  x <- prepare.votes(votes, fsep=fsep)
-	nc <- ncol(x)
-	cnames <- colnames(x)
+  votes <- prepare.votes(votes, fsep=fsep)
+	nc <- ncol(votes)
+	cnames <- colnames(votes)
 	
 	if(is.null(mcan)) {
 		mcan <- floor(nc/2)
@@ -49,8 +49,8 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	# be in row (j-1) of the spreadsheet.
 	#
 	
-	cat("Number of votes cast is", nrow(x), "\n")
-	x <- check.votes(x, "stv", nc=nc)
+	cat("Number of votes cast is", nrow(votes), "\n")
+	x <- check.votes(votes, "stv", nc=nc)
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)
 	
@@ -115,10 +115,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	rownames(result.pref) <- 1:count
 	cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
 	invisible(structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
-	               elect.elim=result.elect, data=x), class="vote.stv"))
+	               elect.elim=result.elect, data=x, invalid.votes=nrow(votes)-nrow(x)), class="vote.stv"))
 }
 
-summary.vote.stv <- function(object) {
+summary.vote.stv <- function(object, ...) {
   ncounts <- nrow(object$preferences)
   df <- data.frame(matrix(NA, nrow=ncol(object$preferences)+3, ncol=2*ncounts-1),
                    stringsAsFactors = FALSE)
@@ -140,22 +140,30 @@ summary.vote.stv <- function(object) {
     if (i %in% where.winner) {
       elected <- cnames[which(object$elect.elim[i,]==1)]
       df["Elected", idxcols[i]] <- paste(elected, collapse=", ")
+      for(can in elected) {
+      	if(idxcols[i]+2 <=  ncol(df)) df[can, (idxcols[i]+2):ncol(df)] <- NA
+      }
     }
     if (i %in%  where.elim) {
       eliminated <-cnames[which(object$elect.elim[i,]==-1)]
       df["Eliminated", idxcols[i]] <- paste(eliminated, collapse=", ")
+      for(can in eliminated) {
+      	if(idxcols[i]+2 <=  ncol(df)) df[can, (idxcols[i]+2):ncol(df)] <- NA
+      }
     }
   }
   df[is.na(df)] <- ""
   class(df) <- c('summary.vote.stv', class(df))
   attr(df, "number.of.votes") <- nrow(object$data)
+  attr(df, "number.of.invalid.votes") <- object$invalid.votes
   return(df)
 }
 
 print.summary.vote.stv <- function(x, ...) {
-  cat("\nSingle transferable vote count")
-  cat("\n==============================")
-  cat("\nNumber of valid votes: ", attr(x, "number.of.votes"))
+  cat("\nResults of Single transferable vote")
+  cat("\n===================================")
+  cat("\nNumber of valid votes:   ", attr(x, "number.of.votes"))
+  cat("\nNumber of invalid votes: ", attr(x, "number.of.invalid.votes"))
   print(kable(x, align='r', ...))
   #cat("\nElected:", paste(x$Elected[x$Elected != ""], collapse=", "), "\n\n")
   cat("\nElected:", paste(x['Elected', x['Elected',] != ""], collapse=", "), "\n\n")
@@ -164,6 +172,9 @@ print.summary.vote.stv <- function(x, ...) {
 "view" <- function(object, ...) UseMethod("view")
 view.vote.stv <- function(object, ...) {
  s <- summary(object)
- formatter <- list(area(row=2:(nrow(s)-2), col=seq(1,ncol(s), by=2)) ~ color_text("red", "red"))
+ formatter <- list(area(row=2:(nrow(s)-2), col=seq(1,ncol(s), by=2)) ~ color_text("red", "red"),
+ 					area(row=1, col=seq(1,ncol(s), by=2)) ~ color_text("blue", "blue")
+ 					#Quota=color_text("blue", "blue")
+ 					)
  formattable(s, formatter, ...)
 }

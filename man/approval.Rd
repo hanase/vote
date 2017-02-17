@@ -1,76 +1,76 @@
 \name{approval}
 \alias{approval}
-%- Also NEED an '\alias' for EACH other topic documented here.
+\alias{summary.vote.approval}
+\alias{view.vote.approval}
+\alias{print.summary.vote.approval}
+\alias{vote.approval}
+
+\alias{plurality}
+\alias{summary.vote.plurality}
+\alias{view.vote.plurality}
+\alias{print.summary.vote.plurality}
+\alias{vote.plurality}
+
 \title{
-Approval Vote Count
+Approval and Plurality Vote Count
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Count votes using the approval and plurality method. Each voter can select  candidates using  1 for a selection and 0 otherwise. In the approval method, any number of candidates can be selected by a voter, while in the plurality method only one candidate can be chosen by a voter. Thus, plurality is a special case of approval. The winner in either method is the most-approved candidate.
 }
 \usage{
 approval(votes, mcan = 1, fsep = "\t", ...)
+
+\method{summary}{vote.approval}(object, \dots)
+
+\method{view}{vote.approval}(object, \dots)
+
+plurality(votes, mcan = 1, fsep = "\t", ...)
+
+\method{summary}{vote.plurality}(object, \dots)
+
+\method{view}{vote.plurality}(object, \dots)
+
+
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
-  \item{votes}{
-%%     ~~Describe \code{votes} here~~
+  \item{votes}{Matrix or data frame of zeros and ones containing the votes. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a tab-separated file name from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros.}
+  \item{mcan}{Number of candidates to be elected. Approval and plurality voting is usually a single-winner voting method.}
+  \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+  \item{\dots}{Not used.}
+  \item{object}{Object of class \code{vote.approval} or \code{vote.plurality}.}
 }
-  \item{mcan}{
-%%     ~~Describe \code{mcan} here~~
-}
-  \item{fsep}{
-%%     ~~Describe \code{fsep} here~~
-}
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
-}
-}
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Functions \code{approval} and \code{plurality} return an object of class \code{vote.approval} and \code{vote.plurality}, respectively, both of which are lists with the following objects:
+\item{elected}{Vector of names of the elected candidates in the order in which they were elected.}
+\item{totals}{Vector of total votes in the same order as candidates (columns) in the input data.}
+\item{data}{Input data with invalid votes removed.}
+\item{invalid.votes}{Number of invalid votes that were removed from the original dataset.}
 }
 \references{
-%% ~put references to the literature/web site here ~
+\url{https://en.wikipedia.org/wiki/Approval_voting}
+
+\url{https://en.wikipedia.org/wiki/Plurality_voting_method}
 }
 \author{
-%%  ~~who you are~~
+Hana Sevcikova, Adrian Raftery
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{count.votes}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+# Example using the IMS Council dataset modified for approval voting
+data(ims_approval)
+appr.ims <- approval(ims_approval)
+summary(appr.ims)
 
-## The function is currently defined as
-function (votes, mcan = 1, fsep = "\t", ...) 
-{
-    cat("\nApproval vote count")
-    cat("\n===================\n")
-    x <- prepare.votes(votes, fsep = fsep)
-    cat("Number of votes cast is", nrow(x), "\n")
-    x <- check.votes(x, "approval")
-    res <- sum.votes(x)
-    elected <- names(rev(sort(res))[1:mcan])
-    cat("\nElected candidates are, in order of election: \n", 
-        paste(elected, collapse = ", "), "\n")
-    return(structure(list(elected = elected, totals = res), class = "vote.approval"))
-  }
+# Example using the IMS Council dataset modified for plurality voting
+data(ims_plurality)
+pl.ims <- plurality(ims_plurality)
+summary(pl.ims)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
+\keyword{ tools }% use one of  RShowDoc("KEYWORDS")
+

@@ -1,5 +1,6 @@
 import(formattable)
-import(knitr)
+importFrom("knitr", "kable")
+importFrom("utils", "read.table")
 
 export(
     count.votes,

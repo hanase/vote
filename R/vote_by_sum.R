@@ -1,41 +1,44 @@
 approval <- function(votes, mcan=1, fsep='\t', ...) {
   cat("\nApproval vote count")
   cat("\n===================\n")
-  x <- prepare.votes(votes, fsep=fsep)
-  cat("Number of votes cast is", nrow(x), "\n")
-  x <- check.votes(x, "approval")
+  votes <- prepare.votes(votes, fsep=fsep)
+  cat("Number of votes cast is", nrow(votes), "\n")
+  x <- check.votes(votes, "approval")
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-  return(structure(list(elected=elected, totals=res), class="vote.approval"))
+  invisible(structure(list(elected=elected, totals=res, data=x,
+  					invalid.votes=nrow(votes)-nrow(x)), class="vote.approval"))
 }
 
 plurality <- function(votes, mcan=1, fsep='\t', ...) {
   cat("\nPlurality vote count")
   cat("\n====================\n")
-  x <- prepare.votes(votes, fsep=fsep)
-  cat("Number of votes cast is", nrow(x), "\n")
-  x <- check.votes(x, "plurality")
+  votes <- prepare.votes(votes, fsep=fsep)
+  cat("Number of votes cast is", nrow(votes), "\n")
+  x <- check.votes(votes, "plurality")
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-  return(structure(list(elected=elected, totals=res), class="vote.plurality"))
+  invisible(structure(list(elected=elected, totals=res, data=x,
+  					invalid.votes=nrow(votes)-nrow(x)), class="vote.plurality"))
 }
 
-score <- function(votes, mcan=1, max.score=NULL, fsep='\t', ...) {
+score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', ...) {
   cat("\nScore voting count")
   cat("\n==================\n")
-  x <- prepare.votes(votes, fsep=fsep)
-  cat("Number of votes cast is", nrow(x), "\n")
+  votes <- prepare.votes(votes, fsep=fsep)
+  cat("Number of votes cast is", nrow(votes), "\n")
   if(is.null(max.score) || max.score < 1) {
-    max.score <- max(x)
+    max.score <- max(votes)
     warning("Invalid max.score. Set to observed maximum: ", max.score)
   }
-  x <- check.votes(x, "score", max.score)
+  x <- check.votes(votes, "score", max.score)
   res <- sum.votes(x)
-  elected <- names(rev(sort(res))[1:mcan])
+  elected <- names(sort(res, decreasing=larger.wins)[1:mcan])
   cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-  return(structure(list(elected=elected, totals=res), class="vote.score"))
+  invisible(structure(list(elected=elected, totals=res, larger.wins=larger.wins,
+  						data=x, invalid.votes=nrow(votes)-nrow(x)), class="vote.score"))
 }
 
 sum.votes <- function(votes) {
@@ -43,30 +46,35 @@ sum.votes <- function(votes) {
   return (vtot)
 }
 
-.summary.vote <- function(object) {
+.summary.vote <- function(object, larger.wins=TRUE) {
   df <- data.frame(Candidate=names(object$totals), Total=object$totals, 
                    Elected="", stringsAsFactors=FALSE)
-  df <- df[order(df$Total, decreasing=TRUE),]
+  df <- df[order(df$Total, decreasing=larger.wins),]
   df[object$elected, "Elected"] <- "x"
   rownames(df) <- NULL
   df <- rbind(df, c('', sum(df$Total), ''))
   rownames(df)[nrow(df)] <- "Sum"
+  attr(df, "number.of.votes") <- nrow(object$data)
+  attr(df, "number.of.invalid.votes") <- object$invalid.votes
   return(df)
 }
 
-summary.vote.approval <- function(object) {
+summary.vote.approval <- function(object, ...) {
   df <- .summary.vote(object)
   class(df) <- c('summary.vote.approval', class(df))
   return(df)
 }
 
 .print.summary.vote <- function(x, ...) {
-  print(kable(x, ...))
-  cat("\nElected:", paste(x$Candidate[x$Elected == "x"], collapse=", "), "\n\n")
+	cat("\nNumber of valid votes:   ", attr(x, "number.of.votes"))
+  	cat("\nNumber of invalid votes: ", attr(x, "number.of.invalid.votes"))
+  	print(kable(x, ...))
+  	cat("\nElected:", paste(x$Candidate[x$Elected == "x"], collapse=", "), "\n\n")
 }
 
 print.summary.vote.approval <- function(x, ...) {
-  cat("\nApproval vote counts")
+  cat("\nResults of Approval voting")
+  cat("\n==========================")
   .print.summary.vote(x, ...)
 }
 
@@ -80,14 +88,15 @@ view.vote.approval <- function(object, ...) {
 }
 
 
-summary.vote.plurality <- function(object) {
+summary.vote.plurality <- function(object, ...) {
   df <- .summary.vote(object)
   class(df) <- c('summary.vote.plurality', class(df))
   return(df)
 }
 
 print.summary.vote.plurality <- function(x, ...) {
-  cat("\nPlurality voting system")
+  cat("\nResults of Plurality voting")
+  cat("\n===========================")
   .print.summary.vote(x, ...)
 }
 
@@ -95,14 +104,15 @@ view.vote.plurality <- function(object, ...)
   view.vote.approval(object, ...)
 
 
-summary.vote.score <- function(object) {
-  df <- .summary.vote(object)
+summary.vote.score <- function(object, ...) {
+  df <- .summary.vote(object, larger.wins=object$larger.wins)
   class(df) <- c('summary.vote.score', class(df))
   return(df)
 }
 
 print.summary.vote.score <- function(x, ...) {
-  cat("\nPlurality voting system")
+  cat("\nResults of Score voting")
+  cat("\n=======================")
   .print.summary.vote(x, ...)
 }
 
