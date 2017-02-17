@@ -51,9 +51,9 @@ sum.votes <- function(votes) {
 
 check.nseats <- function(nseats, ncandidates, default=1) {
 	if(is.null(nseats)) return(default)
-	if(nseats < 1 || nseats > ncandidates) {
-		nseats <- max(1, min(nseats, ncandidates))
-		warnings("Invalid number of candidates. Set to ", nseats)
+	if(nseats < 1 || nseats >= ncandidates) {
+		nseats <- max(1, min(nseats, ncandidates-1))
+		warning("Invalid number of candidates. Set to ", nseats)
 	}
 	return(nseats)
 }
@@ -80,16 +80,11 @@ summary.vote.approval <- function(object, ...) {
 }
 
 election.info <- function(x) {
-	# df <- data.frame("Number of valid votes:"=attr(x, "number.of.votes"),
-					# "Number of invalid votes:"=attr(x, "number.of.invalid.votes"),
-					# "Number of candidates:"=attr(x, "number.of.candidates"),
-					# "Number of seats:"=attr(x, "number.of.seats")
-	# )
-	# print(df)
-	cat("\nNumber of valid votes:   ", attr(x, "number.of.votes"))
-  	cat("\nNumber of invalid votes: ", attr(x, "number.of.invalid.votes"))
-  	cat("\nNumber of candidates:    ", attr(x, "number.of.candidates"))
-  	cat("\nNumber of seats:         ", attr(x, "number.of.seats"))
+	df <- data.frame(sapply(c("number.of.votes", "number.of.invalid.votes", "number.of.candidates", "number.of.seats"),
+						function(a) attr(x, a)))
+	rownames(df) <- c("Number of valid votes:", "Number of invalid votes:", "Number of candidates:", "Number of seats:")
+	colnames(df) <- NULL
+	print(df)
 }
 
 .print.summary.vote <- function(x, ...) {

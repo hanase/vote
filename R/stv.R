@@ -33,15 +33,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	nc <- ncol(votes)
 	cnames <- colnames(votes)
 	
-	if(is.null(mcan)) {
-		mcan <- floor(nc/2)
-		cat("Number of candidates to be elected not specified.\nDefault value of ", mcan, "used instead.\n")
-	}
-	if(mcan >= nc || mcan < 1) {
-		mcan <- max(1, min(mcan, nc-1))
-		warnings("Invalid number of candidates. Set to ", mcan)
-	}
-	
+	mcan <- check.nseats(mcan, nc, default=floor(nc/2))	
 	elected <- NULL
 	
 	#
