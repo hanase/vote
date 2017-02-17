@@ -69,7 +69,11 @@ data(ims_election)
 stv.ims <- stv(ims_election, mcan = 5)
 summary(stv.ims)
 \dontrun{
-view(stv.ims)}
+view(stv.ims)
+
+# write election results into a csv file
+s <- summary(stv.ims)
+write.csv(s, "myfile.csv")}
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")

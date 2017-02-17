@@ -29,7 +29,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
 	
-  votes <- prepare.votes(votes, fsep=fsep)
+	votes <- prepare.votes(votes, fsep=fsep)
 	nc <- ncol(votes)
 	cnames <- colnames(votes)
 	
@@ -37,6 +37,11 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 		mcan <- floor(nc/2)
 		cat("Number of candidates to be elected not specified.\nDefault value of ", mcan, "used instead.\n")
 	}
+	if(mcan >= nc || mcan < 1) {
+		mcan <- max(1, min(mcan, nc-1))
+		warnings("Invalid number of candidates. Set to ", mcan)
+	}
+	
 	elected <- NULL
 	
 	#
@@ -156,14 +161,15 @@ summary.vote.stv <- function(object, ...) {
   class(df) <- c('summary.vote.stv', class(df))
   attr(df, "number.of.votes") <- nrow(object$data)
   attr(df, "number.of.invalid.votes") <- object$invalid.votes
+  attr(df, "number.of.candidates") <- ncol(object$preferences)
+  attr(df, "number.of.seats") <- length(object$elected)
   return(df)
 }
 
 print.summary.vote.stv <- function(x, ...) {
   cat("\nResults of Single transferable vote")
   cat("\n===================================")
-  cat("\nNumber of valid votes:   ", attr(x, "number.of.votes"))
-  cat("\nNumber of invalid votes: ", attr(x, "number.of.invalid.votes"))
+  election.info(x)
   print(kable(x, align='r', ...))
   #cat("\nElected:", paste(x$Elected[x$Elected != ""], collapse=", "), "\n\n")
   cat("\nElected:", paste(x['Elected', x['Elected',] != ""], collapse=", "), "\n\n")

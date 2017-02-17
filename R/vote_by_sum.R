@@ -4,6 +4,7 @@ approval <- function(votes, mcan=1, fsep='\t', ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   cat("Number of votes cast is", nrow(votes), "\n")
   x <- check.votes(votes, "approval")
+  mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
@@ -17,6 +18,7 @@ plurality <- function(votes, mcan=1, fsep='\t', ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   cat("Number of votes cast is", nrow(votes), "\n")
   x <- check.votes(votes, "plurality")
+  mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
@@ -34,6 +36,7 @@ score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', ..
     warning("Invalid max.score. Set to observed maximum: ", max.score)
   }
   x <- check.votes(votes, "score", max.score)
+  mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(sort(res, decreasing=larger.wins)[1:mcan])
   cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
@@ -46,6 +49,15 @@ sum.votes <- function(votes) {
   return (vtot)
 }
 
+check.nseats <- function(nseats, ncandidates, default=1) {
+	if(is.null(nseats)) return(default)
+	if(nseats < 1 || nseats > ncandidates) {
+		nseats <- max(1, min(nseats, ncandidates))
+		warnings("Invalid number of candidates. Set to ", nseats)
+	}
+	return(nseats)
+}
+
 .summary.vote <- function(object, larger.wins=TRUE) {
   df <- data.frame(Candidate=names(object$totals), Total=object$totals, 
                    Elected="", stringsAsFactors=FALSE)
@@ -56,6 +68,8 @@ sum.votes <- function(votes) {
   rownames(df)[nrow(df)] <- "Sum"
   attr(df, "number.of.votes") <- nrow(object$data)
   attr(df, "number.of.invalid.votes") <- object$invalid.votes
+  attr(df, "number.of.candidates") <- length(object$totals)
+  attr(df, "number.of.seats") <- length(object$elected)
   return(df)
 }
 
@@ -65,9 +79,21 @@ summary.vote.approval <- function(object, ...) {
   return(df)
 }
 
-.print.summary.vote <- function(x, ...) {
+election.info <- function(x) {
+	# df <- data.frame("Number of valid votes:"=attr(x, "number.of.votes"),
+					# "Number of invalid votes:"=attr(x, "number.of.invalid.votes"),
+					# "Number of candidates:"=attr(x, "number.of.candidates"),
+					# "Number of seats:"=attr(x, "number.of.seats")
+	# )
+	# print(df)
 	cat("\nNumber of valid votes:   ", attr(x, "number.of.votes"))
   	cat("\nNumber of invalid votes: ", attr(x, "number.of.invalid.votes"))
+  	cat("\nNumber of candidates:    ", attr(x, "number.of.candidates"))
+  	cat("\nNumber of seats:         ", attr(x, "number.of.seats"))
+}
+
+.print.summary.vote <- function(x, ...) {
+	election.info(x)
   	print(kable(x, ...))
   	cat("\nElected:", paste(x$Candidate[x$Elected == "x"], collapse=", "), "\n\n")
 }

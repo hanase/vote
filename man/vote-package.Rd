@@ -17,6 +17,7 @@ The following voting methods are available:
 \item \link{approval}: Voters give candidates one (approve) or zero (not approve).
 \item \link{plurality}: Only one candidate can be chosen by each voter.
 }
+Output of these functions can be viewed using \code{summary} methods, or in a browser using \code{view} methods. The \code{summary} methods return a data frame which can be stored in a file, see Example below.
 
 Example datasets are included. The \code{\link{ims_election}} dataset contains ballots from the Council election of the Institute of Mathematical Statistics (IMS) which uses the STV method. Modifications of this dataset are available (\code{\link{ims_approval}}, \code{\link{ims_score}}, \code{\link{ims_plurality}}) as examples of data required by the various methods. Dataset \code{\link{food_election}} taken from Wikipedia can be used to test the STV method.
 }
@@ -31,7 +32,12 @@ data(ims_election)
 res <- count.votes(ims_election, method = "stv", mcan = 5, verbose = FALSE)
 summary(res)
 \dontrun{
-view(res)}
+# View results in a browser
+view(res)
+
+# Write election results into a csv file
+s <- summary(res)
+write.csv(s, "IMSstvresults.csv")}
 }
 
 \keyword{ package }
