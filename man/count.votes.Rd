@@ -33,7 +33,7 @@ valid.votes(object)
 }
 
 \author{
-Hana Sevcikova
+Hana Sevcikova, Bernard Silverman
 }
 
 

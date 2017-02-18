@@ -10,7 +10,7 @@
 Datasets on IMS Election
 }
 \description{
-Datasets containing votes for a Council election of the Institute of Mathematical Statistics (IMS). The dataset \code{ims_election} (named also \code{ims_stv}) is the original dataset used with single transferable vote, where candidate names have been changed. Each of the other datasets is a  modified version of the original data to be used as an example for each of the other voting methods. 
+Datasets containing anonymized votes for a past Council election of the Institute of Mathematical Statistics (IMS). The dataset \code{ims_election} (named also \code{ims_stv}) is the original dataset used with single transferable vote, where candidate names have been changed. Each of the other datasets is a  modified version of the original data to be used as an example for each of the other voting methods. 
 }
 \usage{
 data("ims_election")
@@ -28,7 +28,7 @@ data("ims_plurality")
 %%  ~~ If necessary, more details than the __description__ above ~~
 %}
 \source{
-The original dataset (which was randomized, anonymized and write-ins removed) was obtained from the the Institute of Mathematical Statistics. 
+The original dataset (which was randomized and anonymized, with write-in votes removed) was obtained from the the Institute of Mathematical Statistics. 
 }
 \references{
 \url{http://imstat.org/elections/stvprocess.htm}
