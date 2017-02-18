@@ -1,4 +1,4 @@
-stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
+stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -23,9 +23,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	# The program was written by Bernard Silverman for the IMS in August 2002
 	##################################
 	
-  cat("\nSingle transferable vote count")
-  cat("\n==============================\n")
-  
+  if(verbose) {
+    cat("\nSingle transferable vote count")
+    cat("\n==============================\n")
+  }
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
 	
@@ -46,8 +47,8 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 	# be in row (j-1) of the spreadsheet.
 	#
 	
-	cat("Number of votes cast is", nrow(votes), "\n")
-	x <- check.votes(votes, "stv", nc=nc)
+	if(verbose) cat("Number of votes cast is", nrow(votes), "\n")
+	x <- check.votes(votes, "stv")
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)
 	
@@ -110,9 +111,13 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = TRUE, ...) {
 		} 
 	}
 	rownames(result.pref) <- 1:count
-	cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-	invisible(structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
-	               elect.elim=result.elect, data=x, invalid.votes=nrow(votes)-nrow(x)), class="vote.stv"))
+	#cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
+	result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
+	               elect.elim=result.elect, data=x, 
+	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+	               class="vote.stv")
+	print(summary(result))
+	invisible(result)
 }
 
 summary.vote.stv <- function(object, ...) {
@@ -152,7 +157,7 @@ summary.vote.stv <- function(object, ...) {
   df[is.na(df)] <- ""
   class(df) <- c('summary.vote.stv', class(df))
   attr(df, "number.of.votes") <- nrow(object$data)
-  attr(df, "number.of.invalid.votes") <- object$invalid.votes
+  attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- ncol(object$preferences)
   attr(df, "number.of.seats") <- length(object$elected)
   return(df)

@@ -13,7 +13,7 @@ Single Transferable Vote
 Count votes using the single transferable voting method.
 }
 \usage{
-stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = TRUE, \dots)
+stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, \dots)
 
 \method{summary}{vote.stv}(object, \dots)
 
@@ -33,7 +33,7 @@ stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = TRUE, \dots)
 \details{
 For details on single transferable vote see e.g. \url{http://imstat.org/elections/stvprocess.htm}.
 
-The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros.
+The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 }
 
 \value{
@@ -43,7 +43,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{quotas}{Vector of quotas, one for each count.}
 \item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
 \item{data}{Input data with invalid votes removed.}
-\item{invalid.votes}{Number of invalid votes that were removed from the original dataset.}
+\item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 }
 
 \references{
@@ -57,9 +57,11 @@ Bernard Silverman, Adrian Raftery, Hana Sevcikova
 
 
 \examples{
-# Example from Wikipedia
+# Reproducing example from Wikipedia
+# https://en.wikipedia.org/wiki/Single_transferable_vote#Example
+# Uses eps=1
 data(food_election)
-stv.food <- stv(food_election, mcan = 3)
+stv.food <- stv(food_election, mcan = 3, eps = 1)
 summary(stv.food)
 \dontrun{
 view(stv.food)}
@@ -67,7 +69,6 @@ view(stv.food)}
 # Example of the IMS Council voting
 data(ims_election)
 stv.ims <- stv(ims_election, mcan = 5)
-summary(stv.ims)
 \dontrun{
 view(stv.ims)
 

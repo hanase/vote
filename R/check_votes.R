@@ -1,6 +1,7 @@
-check.votes.stv <- function(record, nc, ...) {
+check.votes.stv <- function(record, ...) {
+  if(! 1 %in% record) return(FALSE)
   z <- sort(diff(c(0, diff(sort(c(0, record))), 1)))
-  return(z[nc] == 0 && z[nc + 1] == 1)
+  return(z[length(record)] == 0 && z[length(record) + 1] == 1)
 }
 
 check.votes.approval <- function(record, ...) {
@@ -21,17 +22,9 @@ is.valid.vote <- function(x, method, ...) {
 
 check.votes <- function(x, ...) {
   ok <- is.valid.vote(x, ...)
-  if(any(!ok)) {
-    cat("Excluded votes:\n")
-    print(x[!ok,])
-    cat("Number of valid votes is", sum(ok), "\n")
-  }
+  if(any(!ok)) 
+    cat("Detected ", sum(!ok), "invalid votes. Number of valid votes is", sum(ok), ".\nUse invalid.votes(...) function to view discarded records.\n")
   return(x[ok, ])
-}
-
-assemble.args.for.check.stv <- function(x, nc=NULL, ...) {
-  if(is.null(nc)) nc <- ncol(x)
-  return(list(nc=nc))
 }
 
 assemble.args.for.check.score <- function(x, max.score=NULL, ...) {

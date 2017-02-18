@@ -8,6 +8,8 @@ export(
     approval,
     plurality,
     score,
+    invalid.votes,
+    valid.votes,
     view
 )
 

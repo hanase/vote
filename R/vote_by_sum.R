@@ -1,36 +1,31 @@
 approval <- function(votes, mcan=1, fsep='\t', ...) {
-  cat("\nApproval vote count")
-  cat("\n===================\n")
   votes <- prepare.votes(votes, fsep=fsep)
-  cat("Number of votes cast is", nrow(votes), "\n")
   x <- check.votes(votes, "approval")
   mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
-  cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-  invisible(structure(list(elected=elected, totals=res, data=x,
-  					invalid.votes=nrow(votes)-nrow(x)), class="vote.approval"))
+  result <- structure(list(elected=elected, totals=res, data=x,
+  					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+  					class="vote.approval")
+  print(summary(result))
+  invisible(result)
 }
 
 plurality <- function(votes, mcan=1, fsep='\t', ...) {
-  cat("\nPlurality vote count")
-  cat("\n====================\n")
   votes <- prepare.votes(votes, fsep=fsep)
-  cat("Number of votes cast is", nrow(votes), "\n")
   x <- check.votes(votes, "plurality")
   mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
-  cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-  invisible(structure(list(elected=elected, totals=res, data=x,
-  					invalid.votes=nrow(votes)-nrow(x)), class="vote.plurality"))
+  result <- structure(list(elected=elected, totals=res, data=x,
+              invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+              class="vote.plurality")
+  print(summary(result))
+  invisible(result)
 }
 
 score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', ...) {
-  cat("\nScore voting count")
-  cat("\n==================\n")
   votes <- prepare.votes(votes, fsep=fsep)
-  cat("Number of votes cast is", nrow(votes), "\n")
   if(is.null(max.score) || max.score < 1) {
     max.score <- max(votes)
     warning("Invalid max.score. Set to observed maximum: ", max.score)
@@ -39,9 +34,11 @@ score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', ..
   mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(sort(res, decreasing=larger.wins)[1:mcan])
-  cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
-  invisible(structure(list(elected=elected, totals=res, larger.wins=larger.wins,
-  						data=x, invalid.votes=nrow(votes)-nrow(x)), class="vote.score"))
+  result <- structure(list(elected=elected, totals=res, larger.wins=larger.wins,
+                  data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+                  class="vote.score")
+  print(summary(result))
+  invisible(result)
 }
 
 sum.votes <- function(votes) {
@@ -67,7 +64,7 @@ check.nseats <- function(nseats, ncandidates, default=1) {
   df <- rbind(df, c('', sum(df$Total), ''))
   rownames(df)[nrow(df)] <- "Sum"
   attr(df, "number.of.votes") <- nrow(object$data)
-  attr(df, "number.of.invalid.votes") <- object$invalid.votes
+  attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- length(object$totals)
   attr(df, "number.of.seats") <- length(object$elected)
   return(df)

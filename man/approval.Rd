@@ -46,7 +46,7 @@ Functions \code{approval} and \code{plurality} return an object of class \code{v
 \item{elected}{Vector of names of the elected candidates in the order in which they were elected.}
 \item{totals}{Vector of total votes in the same order as candidates (columns) in the input data.}
 \item{data}{Input data with invalid votes removed.}
-\item{invalid.votes}{Number of invalid votes that were removed from the original dataset.}
+\item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Approval_voting}
@@ -63,13 +63,12 @@ Hana Sevcikova, Adrian Raftery
 \examples{
 # Example using the IMS Council dataset modified for approval voting
 data(ims_approval)
-appr.ims <- approval(ims_approval)
-summary(appr.ims)
+approval(ims_approval)
 
 # Example using the IMS Council dataset modified for plurality voting
 data(ims_plurality)
 pl.ims <- plurality(ims_plurality)
-summary(pl.ims)
+invalid.votes(pl.ims)
 }
 
 \keyword{ tools }% use one of  RShowDoc("KEYWORDS")

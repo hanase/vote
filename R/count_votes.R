@@ -14,10 +14,17 @@ count.votes <- function(votes, method=c("auto", "plurality", "approval", "stv", 
     for (meth in all.methods) {
       assembly.fun <- paste0("assemble.args.for.check.", meth) 
       args <- if(exists(assembly.fun)) do.call(assembly.fun, list(x, ...)) else list()
-      #if(meth=="score" && (is.null(max.score)  || max.score < 1)) max.score <- max(x)
       valid[meth] <- sum(do.call(is.valid.vote, c(list(x, method=meth), args)))
     }
     method <- names(valid)[which.max(valid)]
   }
   return(do.call(method, list(x, ...)))
+}
+
+invalid.votes <- function(object) {
+  return(object$invalid.votes)
+}
+
+valid.votes <- function(object) {
+  return(object$data)
 }
