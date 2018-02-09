@@ -52,6 +52,33 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)
 	
+	# Create elimination ranking using forwards tie-breaking
+	# element ij in matrix nij is the number of j-th preferences
+	# for candidate i
+	nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
+	# ranking for each preference
+	nij.ranking <- apply(nij, 2, rank, ties.method="min")
+	rnk <- nij.ranking[,1]
+	dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
+	# resolve ranking duplicates by moving to the next column
+	j <- 2
+	while(any(dpl)) {
+	    rnk[dpl] <- NA
+	    for(pref in 1:nc) if(! pref %in% rnk) break
+	    # which candidates to resolve
+	    in.game <- is.na(rnk)
+	    # if we moved across all columns and there are 
+	    # still duplicates, determine the rank randomly
+	    if(j > ncol(nij)) { 
+	        rnk[in.game] <- sample(sum(in.game)) + pref - 1
+	        break
+	    }
+	    rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
+	    dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
+	    j <- j + 1
+	}
+	tie.elim.rank <- rnk
+	
 	# initialize results
 	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
 	                                       dimnames=list(NULL, cnames))
@@ -67,7 +94,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 		#
 		# calculate quota and total first preference votes
 		#
-	  count <- count + 1
+	    count <- count + 1
 		vcast <- apply(w * (x == 1), 2, sum)
 		names(vcast) <- cnames
 		quota <- sum(vcast)/(mcan + 1) + eps
@@ -75,10 +102,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 		result.pref <- rbind(result.pref, vcast)
 		result.elect <- rbind(result.elect, rep(0,nc))
 		if(verbose) {
-			cat("\nCount:" , count, "\n")
-		  df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
-		  rownames(df) <- count
-		  print(df)
+		    cat("\nCount:" , count, "\n")
+		    df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
+		    rownames(df) <- count
+		    print(df)
 		}
 		#
 		# if leading candidate exceeds quota, declare elected and adjust weights
@@ -94,12 +121,21 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 			result.elect[count,ic] <- 1
 			if(verbose) cat("Candidate", cnames[ic], "elected \n")
 		} else {
-			#
 			# if no candidate reaches quota, mark lowest candidate for elimination
 			vmin <- min(vcast[vcast > 0])
-			ic <- min((1:nc)[vcast == vmin])
+			ic <- (1:nc)[vcast == vmin]
+			tie <- FALSE
+			if(length(ic) > 1) {# tie
+			    iic <- which.min(tie.elim.rank[ic])
+			    ic <- ic[iic]
+			    tie <- TRUE
+			}
 			result.elect[count,ic] <- -1
-			if(verbose) cat("Candidate", cnames[ic], "eliminated \n")
+			if(verbose) {
+			    cat("Candidate", cnames[ic], "eliminated ")
+			    if(tie) cat("using forwards tie-breaking method")
+			    cat("\n")
+			}
 		}
 		for(i in (1:nvotes)) {
 			jp <- x[i, ic]
