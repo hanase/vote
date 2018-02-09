@@ -34,6 +34,8 @@ stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, \dots)
 For a description of the single transferable vote system see \url{http://imstat.org/elections/stvprocess.htm}.
 
 The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
+
+Ties are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
 }
 
 \value{
@@ -47,6 +49,10 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 }
 
 \references{
+
+R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
+
+
 \url{http://imstat.org/elections/stvprocess.htm}
 
 \url{https://en.wikipedia.org/wiki/Single_transferable_vote}
@@ -75,6 +81,13 @@ view(stv.ims)
 # write election results into a csv file
 s <- summary(stv.ims)
 write.csv(s, "myfile.csv")}
+
+# Example of a small committee dataset
+# with four candidates (C) and four
+# voting committee members (uses tie-breaking)
+votes <- data.frame(C1=c(3,2,1,3), C2=c(2,1,2,4),
+                    C3=c(4,3,3,1), C4=c(1,4,4,2))
+stv(votes, mcan = 2, verbose = TRUE)                    
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")
