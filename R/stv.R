@@ -120,17 +120,28 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 		#
 		vmax <- max(vcast)
 		if(vmax >= quota) {
-			ic <- max((1:nc)[vcast == vmax])
+			ic <- (1:nc)[vcast == vmax]
+			tie <- FALSE
+			if(length(ic) > 1) {# tie
+			    iic <- which.max(tie.elim.rank[ic])
+			    ic <- ic[iic]
+			    tie <- TRUE
+			}
 			index <- (x[, ic] == 1)
 			w[index] <- (w[index] * (vmax - quota))/vmax
 			mcan <- mcan - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
-			if(verbose) cat("Candidate", cnames[ic], "elected \n")
+			if(verbose) {
+			    cat("Candidate", cnames[ic], "elected ")
+			    if(tie) cat("using forwards tie-breaking method")
+			    cat("\n")
+			}
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
 		    zero.eliminated <- FALSE
-		    if(any(first.vcast == 0)) { # eliminate candidates with zero votes
+		    # if there are candidates with zero first votes, eliminate those first
+		    if(any(first.vcast == 0)) { 
 		        vmin <- min(first.vcast)
 		        ic <- (1:nc)[first.vcast == vmin]
 		        zero.eliminated <- TRUE
