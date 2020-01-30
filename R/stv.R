@@ -61,22 +61,27 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	rnk <- nij.ranking[,1]
 	dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
 	# resolve ranking duplicates by moving to the next column
-	j <- 2
-	while(any(dpl)) {
-	    rnk[dpl] <- NA
-	    for(pref in 1:nc) if(! pref %in% rnk) break
-	    # which candidates to resolve
-	    in.game <- is.na(rnk)
-	    # if we moved across all columns and there are 
-	    # still duplicates, determine the rank randomly
-	    if(j > ncol(nij)) { 
-	        rnk[in.game] <- sample(sum(in.game)) + pref - 1
-	        break
+    if(any(dpl)) {
+	    for(pref in 1:nc) {
+	        if(! pref %in% rnk[dpl]) next
+	        j <- 2
+	        rnk[rnk == pref] <- NA
+	        while(any(is.na(rnk))) {
+	            # which candidates to resolve
+	            in.game <- is.na(rnk)
+	            # if we moved across all columns and there are 
+	            # still duplicates, determine the rank randomly
+	            if(j > ncol(nij)) { 
+	                rnk[in.game] <- sample(sum(in.game)) + pref - 1
+	                break
+	            }
+	            rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
+	            dplj <- rnk == pref & (duplicated(rnk) | duplicated(rnk, fromLast = TRUE))
+	            rnk[dplj] <- NA
+	            j <- j + 1
+	        }
 	    }
-	    rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
-	    dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
-	    j <- j + 1
-	}
+    }
 	tie.elim.rank <- rnk
 	
 	# initialize results
