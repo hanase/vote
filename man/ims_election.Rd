@@ -31,7 +31,7 @@ data("ims_plurality")
 The original dataset (which was randomized and anonymized, with write-in votes removed) was obtained from the the Institute of Mathematical Statistics. 
 }
 \references{
-\url{http://imstat.org/elections/stvprocess.htm}
+\url{https://imstat.org/elections/single-transferable-voting-system/}
 }
 \examples{
 data(ims_election)

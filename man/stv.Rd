@@ -10,7 +10,7 @@
 Single Transferable Vote
 }
 \description{
-Count votes using the single transferable voting method.
+Count votes using the single transferable voting method, also known as ranked choice voting or instant runoff.
 }
 \usage{
 stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, \dots)
@@ -31,7 +31,7 @@ stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, \dots)
   \item{object}{Object of class \code{vote.stv}.}
 }
 \details{
-For a description of the single transferable vote system see \url{http://imstat.org/elections/stvprocess.htm}.
+For a description of the single transferable vote system see \url{https://imstat.org/elections/single-transferable-voting-system}.
 
 The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 
@@ -53,7 +53,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
 
 
-\url{http://imstat.org/elections/stvprocess.htm}
+\url{https://imstat.org/elections/single-transferable-voting-system}
 
 \url{https://en.wikipedia.org/wiki/Single_transferable_vote}
 }

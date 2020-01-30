@@ -5,6 +5,6 @@ Version: 1.2-0
 Date: 2020-01-29
 Author: Hana Sevcikova, Bernard Silverman, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
-Description: Counting election votes and determining election results by different methods, including the single transferable vote, approval, score and plurality methods.
+Description: Counting election votes and determining election results by different methods, including the single transferable vote (ranked choice), approval, score and plurality methods.
 Imports: formattable, knitr
 License: GPL (>=2)
