@@ -95,6 +95,8 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	if(verbose) cat("\nList of 1st preferences in STV counts: \n")
 	
 	count <- 0
+	first.vcast <- apply(w * (x == 1), 2, sum)
+	names(first.vcast) <- cnames
 	while(mcan > 0) {
 		#
 		# calculate quota and total first preference votes
@@ -127,8 +129,15 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 			if(verbose) cat("Candidate", cnames[ic], "elected \n")
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
-			vmin <- min(vcast[vcast > 0])
-			ic <- (1:nc)[vcast == vmin]
+		    zero.eliminated <- FALSE
+		    if(any(first.vcast == 0)) { # eliminate candidates with zero votes
+		        vmin <- min(first.vcast)
+		        ic <- (1:nc)[first.vcast == vmin]
+		        zero.eliminated <- TRUE
+		    } else {
+			    vmin <- min(vcast[vcast > 0])
+			    ic <- (1:nc)[vcast == vmin]
+		    }
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
 			    iic <- which.min(tie.elim.rank[ic])
@@ -141,6 +150,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 			    if(tie) cat("using forwards tie-breaking method")
 			    cat("\n")
 			}
+			if(zero.eliminated)	first.vcast[ic] <- 1
 		}
 		for(i in (1:nvotes)) {
 			jp <- x[i, ic]
