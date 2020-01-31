@@ -1,3 +1,9 @@
+1.2-1 (01/31/2020)
+-----
+Elimination of candidates with no first preferences happens after the first votes redistribution.
+
+Added seed argument to the stv() function.
+
 1.2-0 (01/30/2020)
 -----
 Fixed bug in forwards tie-breaking.

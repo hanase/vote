@@ -1,4 +1,4 @@
-stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) {
+stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed = 1234, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -62,6 +62,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
 	# resolve ranking duplicates by moving to the next column
     if(any(dpl)) {
+        if(!is.null(seed)) set.seed(seed)
 	    for(pref in 1:nc) {
 	        if(! pref %in% rnk[dpl]) next
 	        j <- 2

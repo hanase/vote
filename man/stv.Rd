@@ -13,7 +13,7 @@ Single Transferable Vote
 Count votes using the single transferable voting method, also known as ranked choice voting or instant runoff.
 }
 \usage{
-stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, \dots)
+stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, seed = 1234, \dots)
 
 \method{summary}{vote.stv}(object, \dots)
 
@@ -27,6 +27,7 @@ stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, \dots)
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
+  \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{\dots}{Not used.}
   \item{object}{Object of class \code{vote.stv}.}
 }
