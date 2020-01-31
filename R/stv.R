@@ -95,8 +95,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	if(verbose) cat("\nList of 1st preferences in STV counts: \n")
 	
 	count <- 0
-	first.vcast <- apply(w * (x == 1), 2, sum)
-	names(first.vcast) <- cnames
+	first.vcast <- NULL
 	while(mcan > 0) {
 		#
 		# calculate quota and total first preference votes
@@ -139,8 +138,15 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 			}
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
-		    zero.eliminated <- FALSE
+            #
+		    if(is.null(first.vcast)) { # first time elimination happens
+		        # keep initial count of first preferences after redistributing
+                first.vcast <- apply(w * (x == 1), 2, sum)
+                names(first.vcast) <- cnames
+                first.vcast[colSums(result.elect) > 0] <- 1 # don't allow zeros for already elected candidates
+            }
 		    # if there are candidates with zero first votes, eliminate those first
+		    zero.eliminated <- FALSE
 		    if(any(first.vcast == 0)) { 
 		        vmin <- min(first.vcast)
 		        ic <- (1:nc)[first.vcast == vmin]
@@ -158,11 +164,13 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 			result.elect[count,ic] <- -1
 			if(verbose) {
 			    cat("Candidate", cnames[ic], "eliminated ")
+			    if(zero.eliminated) cat("due to zero first preferences ")
 			    if(tie) cat("using forwards tie-breaking method")
 			    cat("\n")
 			}
 			if(zero.eliminated)	first.vcast[ic] <- 1
 		}
+		# redistribute votes
 		for(i in (1:nvotes)) {
 			jp <- x[i, ic]
 			if(jp > 0) {
@@ -170,7 +178,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 				x[i, index] <- x[i, index] - 1
 				x[i, ic] <- 0
 			} 
-		} 
+		}
 	}
 	rownames(result.pref) <- 1:count
 	#cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
