@@ -88,7 +88,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
 	                                       dimnames=list(NULL, cnames))
 	result.quota <- c()
-	
+	orig.x <- x
 	#
 	# the main loop
 	#
@@ -183,7 +183,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, ...) 
 	rownames(result.pref) <- 1:count
 	#cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
 	result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
-	               elect.elim=result.elect, data=x, 
+	               elect.elim=result.elect, data=orig.x, 
 	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
 	               class="vote.stv")
 	print(summary(result))
@@ -204,8 +204,9 @@ summary.vote.stv <- function(object, ...) {
   # remove quotas for winners and compute difference
   where.winner <- which(rowSums(object$elect.elim==1)==1)
   pref[where.winner,] <- pref[where.winner,] - object$elect.elim[where.winner,]*object$quotas[where.winner]
-  df[2:(nrow(df)-2), seq(2,ncol(df), by=2)] <- t(round(
-      object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], 3))
+  tmp <- t(round(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], 3))
+  if(nrow(tmp) == 1) tmp <- as.numeric(tmp) # because of R weirdness with vectors and matrices (when there is just one round)
+  df[2:(nrow(df)-2), seq(2,ncol(df), by=2)] <- tmp
   where.elim <- which(rowSums(object$elect.elim==-1)==1)
   cnames <- colnames(object$elect.elim)
   for(i in 1:ncounts) {
