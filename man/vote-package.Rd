@@ -6,13 +6,13 @@
 Election Vote Counting
 }
 \description{
-Counting election votes and determining election results by different methods, including the single transferable vote, approval, score and plurality methods.
+Counting election votes and determining election results by different methods, including the single transferable vote (ranked choice), approval, score and plurality methods.
 }
 \details{
 The main function of the package is called \code{\link{count.votes}}. If no specific method is passed, it decides on the basis of the available data which method is the most appropriate. Specific methods can also be invoked explicitly. 
 The following voting methods are available:
 \itemize{
-\item \link{stv}: Single transferable vote (STV) where voters rank candidates in order.
+\item \link{stv}: Single transferable vote (STV) where voters rank candidates in order. It is also known as ranked choice voting or or instant runoff.
 \item \link{score}: Range voting where each voter gives each candidate a 
 score within a specific range.
 \item \link{approval}: Voters give each candidate one (approve) or zero (not approve).
