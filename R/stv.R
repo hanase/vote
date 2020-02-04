@@ -60,6 +60,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	nij.ranking <- apply(nij, 2, rank, ties.method="min")
 	rnk <- nij.ranking[,1]
 	dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
+	sampled <- rep(FALSE, length(rnk))
 	# resolve ranking duplicates by moving to the next column
     if(any(dpl)) {
         if(!is.null(seed)) set.seed(seed)
@@ -74,6 +75,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	            # still duplicates, determine the rank randomly
 	            if(j > ncol(nij)) { 
 	                rnk[in.game] <- sample(sum(in.game)) + pref - 1
+	                sampled <- sampled | in.game
 	                break
 	            }
 	            rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
@@ -134,7 +136,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 			result.elect[count,ic] <- 1
 			if(verbose) {
 			    cat("Candidate", cnames[ic], "elected ")
-			    if(tie) cat("using forwards tie-breaking method")
+			    if(tie) {
+			        cat("using forwards tie-breaking method ")
+			        if(sampled[ic]) cat("(sampled)")
+			    }
 			    cat("\n")
 			}
 		} else {
@@ -166,7 +171,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 			if(verbose) {
 			    cat("Candidate", cnames[ic], "eliminated ")
 			    if(zero.eliminated) cat("due to zero first preferences ")
-			    if(tie) cat("using forwards tie-breaking method")
+			    if(tie) {
+			        cat("using forwards tie-breaking method ")
+			        if(sampled[ic]) cat("(sampled)")
+			    }
 			    cat("\n")
 			}
 			if(zero.eliminated)	first.vcast[ic] <- 1

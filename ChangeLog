@@ -1,8 +1,10 @@
-1.2-1 (01/31/2020)
+1.2-1 (02/01/2020)
 -----
 Elimination of candidates with no first preferences happens after the first votes redistribution.
 
-Added seed argument to the stv() function.
+Added seed argument to the stv() function. 
+
+If elimination ranking is determined by sampling, the verbose mode informs about it.
 
 1.2-0 (01/30/2020)
 -----
