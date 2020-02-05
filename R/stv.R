@@ -193,7 +193,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	#cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
 	result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
 	               elect.elim=result.elect, data=orig.x, 
-	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
 	               class="vote.stv")
 	print(summary(result))
 	invisible(result)
