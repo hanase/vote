@@ -5,7 +5,7 @@ approval <- function(votes, mcan=1, fsep='\t', ...) {
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   result <- structure(list(elected=elected, totals=res, data=x,
-  					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+  					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
   					class="vote.approval")
   print(summary(result))
   invisible(result)
@@ -18,7 +18,7 @@ plurality <- function(votes, mcan=1, fsep='\t', ...) {
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   result <- structure(list(elected=elected, totals=res, data=x,
-              invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+              invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
               class="vote.plurality")
   print(summary(result))
   invisible(result)
@@ -35,7 +35,7 @@ score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', ..
   res <- sum.votes(x)
   elected <- names(sort(res, decreasing=larger.wins)[1:mcan])
   result <- structure(list(elected=elected, totals=res, larger.wins=larger.wins,
-                  data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+                  data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
                   class="vote.score")
   print(summary(result))
   invisible(result)

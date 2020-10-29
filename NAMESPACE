@@ -8,6 +8,7 @@ export(
     approval,
     plurality,
     score,
+    condorcet,
     invalid.votes,
     valid.votes,
     view
@@ -26,3 +27,6 @@ S3method(view, vote.plurality)
 S3method(summary, vote.score)
 S3method(print, summary.vote.score)
 S3method(view, vote.score)
+S3method(summary, vote.condorcet)
+S3method(print, summary.vote.condorcet)
+S3method(view, vote.condorcet)
