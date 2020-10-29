@@ -5,12 +5,12 @@ condorcet <- function(votes, fsep = '\t', ...) {
     x <- check.votes(votes, "stv")
     mcan <- check.nseats(1, ncol(x))
     x2 <- x
-    x2[x2 == 0] <- NA 
+    x2[x2 == 0] <- max(x2) + 1 # give not-ranked candidates the worst ranking
     points <- matrix(0, nc, nc, dimnames = list(cnames, cnames))
     for(i in 1:(nc-1)){
         for(j in ((i+1):nc)){
-            i.wins <- sum(x2[,i] < x2[,j], na.rm = TRUE)
-            j.wins <- sum(x2[,i] > x2[,j], na.rm = TRUE)
+            i.wins <- sum(x2[,i] < x2[,j])
+            j.wins <- sum(x2[,i] > x2[,j])
             points[i,j] <- i.wins > j.wins
             points[j,i] <- i.wins < j.wins
         }
