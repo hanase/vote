@@ -4,11 +4,15 @@ condorcet <- function(votes, fsep = '\t', ...) {
     cnames <- colnames(votes)
     x <- check.votes(votes, "stv")
     mcan <- check.nseats(1, ncol(x))
+    x2 <- x
+    x2[x2 == 0] <- NA 
     points <- matrix(0, nc, nc, dimnames = list(cnames, cnames))
     for(i in 1:(nc-1)){
         for(j in ((i+1):nc)){
-            points[i,j] <- sum(x[,i] < x[,j]) > sum(x[,i] > x[,j])
-            points[j,i] <- sum(x[,i] < x[,j]) < sum(x[,i] > x[,j])
+            i.wins <- sum(x2[,i] < x2[,j], na.rm = TRUE)
+            j.wins <- sum(x2[,i] > x2[,j], na.rm = TRUE)
+            points[i,j] <- i.wins > j.wins
+            points[j,i] <- i.wins < j.wins
         }
     }
     cdc.winner <- apply(points, 1, function(p) sum(p) == nc-1)
