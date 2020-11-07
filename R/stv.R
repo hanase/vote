@@ -1,4 +1,4 @@
-stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed = 1234, ...) {
+stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed = 1234, quiet = FALSE, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -47,8 +47,8 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	# be in row (j-1) of the spreadsheet.
 	#
 	
-	if(verbose) cat("Number of votes cast is", nrow(votes), "\n")
-	x <- check.votes(votes, "stv")
+	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
+	x <- check.votes(votes, "stv", quiet = quiet)
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)
 	
@@ -95,7 +95,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	#
 	# the main loop
 	#
-	if(verbose) cat("\nList of 1st preferences in STV counts: \n")
+	if(verbose && !quiet) cat("\nList of 1st preferences in STV counts: \n")
 	
 	count <- 0
 	first.vcast <- NULL
@@ -110,7 +110,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 		result.quota <- c(result.quota, quota)
 		result.pref <- rbind(result.pref, vcast)
 		result.elect <- rbind(result.elect, rep(0,nc))
-		if(verbose) {
+		if(verbose && !quiet) {
 		    cat("\nCount:" , count, "\n")
 		    df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
 		    rownames(df) <- count
@@ -134,7 +134,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 			mcan <- mcan - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
-			if(verbose) {
+			if(verbose && !quiet) {
 			    cat("Candidate", cnames[ic], "elected ")
 			    if(tie) {
 			        cat("using forwards tie-breaking method ")
@@ -168,7 +168,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 			    tie <- TRUE
 			}
 			result.elect[count,ic] <- -1
-			if(verbose) {
+			if(verbose && !quiet) {
 			    cat("Candidate", cnames[ic], "eliminated ")
 			    if(zero.eliminated) cat("due to zero first preferences ")
 			    if(tie) {
@@ -190,12 +190,11 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 		}
 	}
 	rownames(result.pref) <- 1:count
-	#cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
 	result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
 	               elect.elim=result.elect, data=orig.x, 
 	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
 	               class="vote.stv")
-	print(summary(result))
+	if(!quiet) print(summary(result))
 	invisible(result)
 }
 
@@ -261,6 +260,34 @@ view.vote.stv <- function(object, ...) {
  					)
  formattable(s, formatter, ...)
 }
+
+plot.vote.stv <- function(object, print = TRUE, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {
+    stopifnot(require("ggplot2"))
+    # Plot evolution of the preferences
+    # prepare data in the long format
+    df <- data.table(object$preferences)
+    df[, Count := 1:nrow(df)]
+    dfl <- melt(df, id.vars = "Count", variable.name = "Candidate")
+    # remove zeros from elected and eliminated candidates
+    dfl <- dfl[!(Candidate %in% names(colSums(abs(object$elect.elim)) > 0) & value == 0)] 
+    
+    # dataset for plotting the quota
+    dfq <- data.table(Count = 1:length(object$quotas), value = object$quotas, Candidate = "Quota")
+    
+    # dataset for plotting points of elected and eliminated candidates
+    dfe <- melt(data.table(Count = 1:nrow(object$elect.elim), object$elect.elim), id.vars = "Count", variable.name = "Candidate")
+    dfe <- dfe[value != 0]
+    dfe[, selection := ifelse(value > 0, "elected", "eliminated")]
+    dfe <- dfe[dfl, value := i.value, on = c("Count", "Candidate")]
+    
+    # create plots
+    g <- ggplot(dfl, aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + geom_line()
+    g <- g + geom_line(data = dfq, aes(x = Count), color = "black") + xlab(xlab) + ylab(ylab)
+    g <- g + geom_point(data = dfe, aes(shape = selection), size = point.size) + ylim(range(0, max(dfl$value, dfq$value)))
+    #if(print) print(g)
+    g
+}
+
 
 stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', verbose = FALSE, seed = 1234, ...) {
     ###################################

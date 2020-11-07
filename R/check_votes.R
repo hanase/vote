@@ -48,9 +48,9 @@ is.valid.vote <- function(x, method, ...) {
   return(apply(x, 1, paste0("check.votes.", method), ...))
 }
 
-check.votes <- function(x, ...) {
+check.votes <- function(x, ..., quiet = FALSE) {
   ok <- is.valid.vote(x, ...)
-  if(any(!ok)) 
+  if(any(!ok) && !quiet) 
     cat("Detected ", sum(!ok), "invalid votes. Number of valid votes is", sum(ok), ".\nUse invalid.votes(...) function to view discarded records.\n")
   return(x[ok, ])
 }
