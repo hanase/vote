@@ -261,13 +261,28 @@ view.vote.stv <- function(object, ...) {
  formattable(s, formatter, ...)
 }
 
-image.vote.stv <- function(object, las = 2, ...) {
+image.vote.stv <- function(object, xpref = 1, ypref = 2, all.pref = FALSE, ...) {
     nc <- ncol(object$preferences)
     x <- object$data
-    nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
-    image(x = 1:nc, y = 1:nc, nij[,nc:1], axes = FALSE, xlab = "", ylab = "ranking")
-    axis(2, at = 1:nc, labels = nc:1)
-    axis(3, at = 1:nc, labels = colnames(object$preferences), las = las)
+    if(all.pref) {
+        nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
+        image(x = 1:nc, y = 1:nc, nij[,nc:1], axes = FALSE, xlab = "", ylab = "ranking")
+        axis(2, at = 1:nc, labels = nc:1)
+        axis(3, at = 1:nc, labels = FALSE, tick = FALSE)
+        text(1:nc, y = par("usr")[4], labels = colnames(object$preferences), xpd = NA, srt = 45, adj = 0)
+    } else {
+        xdt <- data.table(x)
+        xdt[, voter := 1:nrow(x)]
+        xdtl <- melt(xdt, id.vars = "voter", variable.name = "candidate", value.name = "rank")
+        xdtl <- xdtl[rank %in% c(xpref, ypref)]
+        xdtw <- dcast(xdtl, voter ~ rank, value.var = "candidate")
+        colnames(xdtw)[2:3] <- c("xpref", "ypref")
+        ctbl <- table(xdtw[, ypref], xdtw[, xpref])
+        image(x = 1:nc, y = 1:nc, t(ctbl[nc:1,]), axes = FALSE, xlab = paste("rank", xpref), ylab = paste("rank", ypref))
+        axis(2, at = nc:1, labels = rownames(ctbl), tick = FALSE, las = 1)
+        axis(3, at = 1:nc, tick = FALSE, labels = FALSE)
+        text(1:nc, y = par("usr")[4], labels = colnames(ctbl), xpd = NA, srt = 45, adj = 0)
+    }
 }
 
 plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {

@@ -29,16 +29,17 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     if(sum(cdc.winner) == 0 && runoff) { # instant run-off
         nwins <- rowSums(points)
         winner.exists <- FALSE
+        cand.names <- cnames
         while(!winner.exists) {
             most.wins <- nwins == max(nwins)
             if(sum(most.wins) < 2) # second most wins
                 most.wins <- most.wins | nwins == max(nwins[nwins < max(nwins)])
-            ro.part <- cnames[most.wins]
+            ro.part <- cand.names[most.wins]
             if(is.null(ro.part.first)) ro.part.first <- ro.part # keep the list of the original run-off participants
             if(length(ro.part) == nc) break # run-off must have less candidates than the original set
             if(sum(most.wins) == 2) { # run-off between two candidates 
                 pair.run <- compare.two.candidates(x2[,which(most.wins)[1]], x2[,which(most.wins)[2]])
-                runoff.winner <- cnames[which(most.wins)[which(pair.run == TRUE)]]
+                runoff.winner <- cand.names[which(most.wins)[which(pair.run == TRUE)]]
             } else { # run-off between more than two candidates 
                 x3 <- x2[, most.wins]
                 p.runoff <- compute.wins(x3, ncol(x3), colnames(x3))
@@ -51,6 +52,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
             if(sum(most.wins) == 2) break
             nwins <- rowSums(p.runoff)
             x2 <- x3
+            cand.names <- colnames(x2)
         }
     }
     result <- structure(list(elected = if(sum(cdc.winner) > 0) cnames[which(cdc.winner)] else NULL, 
