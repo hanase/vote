@@ -261,7 +261,16 @@ view.vote.stv <- function(object, ...) {
  formattable(s, formatter, ...)
 }
 
-plot.vote.stv <- function(object, print = TRUE, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {
+image.vote.stv <- function(object, las = 2, ...) {
+    nc <- ncol(object$preferences)
+    x <- object$data
+    nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
+    image(x = 1:nc, y = 1:nc, nij[,nc:1], axes = FALSE, xlab = "", ylab = "ranking")
+    axis(2, at = 1:nc, labels = nc:1)
+    axis(3, at = 1:nc, labels = colnames(object$preferences), las = las)
+}
+
+plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {
     stopifnot(require("ggplot2"))
     # Plot evolution of the preferences
     # prepare data in the long format
@@ -284,7 +293,6 @@ plot.vote.stv <- function(object, print = TRUE, xlab = "Count", ylab = "Preferen
     g <- ggplot(dfl, aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + geom_line()
     g <- g + geom_line(data = dfq, aes(x = Count), color = "black") + xlab(xlab) + ylab(ylab)
     g <- g + geom_point(data = dfe, aes(shape = selection), size = point.size) + ylim(range(0, max(dfl$value, dfq$value)))
-    #if(print) print(g)
     g
 }
 

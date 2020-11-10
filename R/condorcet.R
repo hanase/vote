@@ -25,21 +25,32 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     points <- compute.wins(x2, nc, cnames)
     cdc.winner <- apply(points, 1, function(p) sum(p) == nc-1)
     cdc.loser <- apply(points, 1, function(p) sum(p) == 0)
-    runoff.winner <- ro.part <- NULL
+    runoff.winner <- ro.part <- ro.part.first <- NULL
     if(sum(cdc.winner) == 0 && runoff) { # instant run-off
         nwins <- rowSums(points)
-        most.wins <- nwins == max(nwins)
-        second.most.wins <- nwins == max(nwins[nwins < max(nwins)])
-        ro.part <- cnames[most.wins | second.most.wins]
-        if(length(ro.part) < nc) { # run-off must have less candidates than the original set
-            if(sum(most.wins) == 1 && sum(second.most.wins) == 1) {
-                pair.run <- compare.two.candidates(x2[,which(most.wins)], x2[,which(second.most.wins)])
-                runoff.winner <- cnames[c(which(most.wins), which(second.most.wins))[which(pair.run == TRUE)]]
-            } else {
-                x3 <- x2[, most.wins | second.most.wins]
+        winner.exists <- FALSE
+        while(!winner.exists) {
+            most.wins <- nwins == max(nwins)
+            if(sum(most.wins) < 2) # second most wins
+                most.wins <- most.wins | nwins == max(nwins[nwins < max(nwins)])
+            ro.part <- cnames[most.wins]
+            if(is.null(ro.part.first)) ro.part.first <- ro.part # keep the list of the original run-off participants
+            if(length(ro.part) == nc) break # run-off must have less candidates than the original set
+            if(sum(most.wins) == 2) { # run-off between two candidates 
+                pair.run <- compare.two.candidates(x2[,which(most.wins)[1]], x2[,which(most.wins)[2]])
+                runoff.winner <- cnames[which(most.wins)[which(pair.run == TRUE)]]
+            } else { # run-off between more than two candidates 
+                x3 <- x2[, most.wins]
                 p.runoff <- compute.wins(x3, ncol(x3), colnames(x3))
                 runoff.winner <- colnames(x3)[apply(p.runoff, 1, function(p) sum(p) == ncol(x3)-1)]
             }
+            if(length(runoff.winner) > 0) {
+                winner.exists <- TRUE
+                break
+            }
+            if(sum(most.wins) == 2) break
+            nwins <- rowSums(p.runoff)
+            x2 <- x3
         }
     }
     result <- structure(list(elected = if(sum(cdc.winner) > 0) cnames[which(cdc.winner)] else NULL, 
@@ -47,7 +58,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
                              invalid.votes = votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE],
                              loser = if(sum(cdc.loser) > 0) cnames[which(cdc.loser)] else NULL,
                              runoff.winner = if(length(runoff.winner) > 0) runoff.winner else NULL, 
-                             runoff.participants = ro.part), 
+                             runoff.participants = ro.part.first), 
                         class="vote.condorcet")
     if(!quiet) print(summary(result))
     invisible(result)
