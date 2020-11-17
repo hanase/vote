@@ -388,8 +388,6 @@ stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t'
     
     # initialize results
     result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, dimnames=list(NULL, cnames))
-    wA <- wAadd <- wAtmp <- matrix(0, ncol=nc, nrow=nvotes, dimnames=list(NULL, cnames))
-    Dmat <- matrix(FALSE, ncol=nc, nrow=nvotes, dimnames=list(NULL, cnames))
     result.quota <- c()
     orig.x <- x
     
@@ -400,10 +398,7 @@ stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t'
     
     count <- 0
     first.vcast <- NULL
-    winner.index <- loser.index <- NULL
-    wA[] <- wAtmp[] <- 1
-    A <- (x == 1)/rowSums(x == 1)
-    wAadd[A < 1] <- A[A < 1] # matrix of additive weights
+    w <- rep(1, nvotes)
     
     while(mcan > 0) {
         #
@@ -412,32 +407,8 @@ stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t'
         count <- count + 1
         A <- (x == 1)/rowSums(x == 1) # splits 1st votes if there are more than one first ranking per voter
         A[is.na(A)] <- 0
-        #if(count == 3) stop("")
-        if(!is.null(winner.index)) { # there was a candidate elected in the previous count
-            if(any(Dmat)) { # there is a split first vote in prior count 
-                A[apply(Dmat, 1, any), ic] <- 1 # this removes prior split with the winner
-                A <- A/rowSums(A)
-            }
-            distr <- (vmax - quota)/vmax # surplus
-            # distribute surplus and add it to the previous weights
-            # wAtmp assures the weights are not added to the elected and eliminated candidates
-            for(i in which(winner.index))
-                A[i, x[i,] == 1] <- A[i, x[i,] == 1] * wA[i, ic]
-            wAadd[winner.index, ] <- (wAadd[winner.index, ] + distr * A[winner.index,]) * wAtmp[winner.index,]
-        } else {
-            if(length(loser.index) > 0) { # there was a candidate eliminated in the previous count
-                for(i in which(loser.index))
-                    A[i, x[i,] == 1] <- A[i, x[i,] == 1] * wA[i, ic]
-                part1 <- loser.index & apply(Dmat, 1, any) # first position did not move
-                part2 <- loser.index & !apply(Dmat, 1, any) # second position became first position
-                wAadd[part1, ] <- wAadd[part1, ] + wAadd[part1, ]*Dmat[part1,]/rowSums(Dmat[part1,,drop = FALSE])
-                wAadd[part2, ] <- wAadd[part2, ] + A[part2, ]
-            }
-        }
-        wAprev <- wA
-        wA[] <- 1
-        wA[wAadd > 0] <- wAadd[wAadd > 0]
-        vcast <- apply(wA * wAtmp * (A > 0), 2, sum) # points for each candidate
+        wD <- w * A
+        vcast <- apply(wD, 2, sum) # points for each candidate
         names(vcast) <- cnames
         quota <- sum(vcast)/(mcan + 1) + eps
         result.quota <- c(result.quota, quota)
@@ -450,15 +421,14 @@ stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t'
             rownames(df) <- count
             print(df)
             #cat("\nWeights:\n")
-            #print(wA * wAtmp * (A > 0))
-            #cat("\nwAprev:\n")
-            #print(wAprev)
+            #print(w)
+            #cat("\nwD:\n")
+            #print(wD)
         }
         #
         # if leading candidate exceeds quota, declare elected and adjust weights
         # mark candidate for elimination in subsequent counting
         #
-        winner.index <- NULL
         vmax <- max(vcast)
         if(vmax >= quota) {
             ic <- (1:nc)[vcast == vmax]
@@ -469,6 +439,7 @@ stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t'
                 tie <- TRUE
             }
             winner.index <- (x[, ic] == 1) # which votes had the winner as first preference
+            w[winner.index] <- rowSums(wD[winner.index, ]) - wD[winner.index, ic] + wD[winner.index, ic] * (vmax - quota)/vmax
             mcan <- mcan - 1
             elected <- c(elected, cnames[ic])
             result.elect[count,ic] <- 1
@@ -519,19 +490,14 @@ stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t'
             loser.index <- (x[, ic] == 1)
         }
         # redistribute votes
-        Dmat[] <- FALSE
         for(i in (1:nvotes)) {
             jp <- x[i, ic]
             if(jp > 0) {
                 index <- (x[i, ] > jp)
-                index.distr <- x[i, ] == jp    # for equal ranks
                 x[i, index] <- x[i, index] - 1
                 x[i, ic] <- 0
-                Dmat[i, index.distr & x[i, ] == jp] <- TRUE # record if rank did not change after redistribution
-                wAtmp[i, ic] <- 0
             }
         }
-        wAtmp[apply(x, 1, sum) == 0,] <- 0 # zero out votes that have no more ranking
     }
     rownames(result.pref) <- 1:count
     result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
