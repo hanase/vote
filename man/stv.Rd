@@ -13,11 +13,16 @@ Single Transferable Vote
 Count votes using the single transferable voting method, also known as ranked choice voting or instant runoff.
 }
 \usage{
-stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, seed = 1234, \dots)
+stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
+  fsep = '\t', verbose = FALSE, seed = 1234, quiet = FALSE, \dots)
 
 \method{summary}{vote.stv}(object, \dots)
 
 \method{view}{vote.stv}(object, \dots)
+
+\method{plot}{vote.stv}(object, \dots)
+
+\method{image}{vote.stv}(object, \dots)
 }
 
 \arguments{
@@ -25,9 +30,11 @@ stv(votes, mcan = NULL, eps = 0.001, fsep = '\t', verbose = FALSE, seed = 1234, 
   \item{mcan}{Number of candidates to be elected. By default it is half the number of candidates standing.}
   \item{eps}{Value added to the quota. I.e. the STV quota is computed as \cr
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
+  \item{equal.ranking}{If \code{TRUE} equal preferences are allowed, see below.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
+  \item{quiet}{If \code{TRUE} no output is printed.}
   \item{\dots}{Not used.}
   \item{object}{Object of class \code{vote.stv}.}
 }
@@ -36,7 +43,9 @@ For a description of the single transferable vote system see \url{https://imstat
 
 The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 
-Ties are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
+By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. However, for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. 
+
+Ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
 }
 
 \value{
@@ -45,6 +54,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{preferences}{Matrix of preferences. Columns correspond to the candidates and rows to the counts (i.e. voting rounds).}
 \item{quotas}{Vector of quotas, one for each count.}
 \item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
+\item{equal.pref.allowed}{Input argument \code{equal.ranking}.}
 \item{data}{Input data with invalid votes removed.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 }
@@ -78,6 +88,8 @@ data(ims_election)
 stv.ims <- stv(ims_election, mcan = 5)
 \dontrun{
 view(stv.ims)
+plot(stv.ims)
+image(stv.ims)
 
 # write election results into a csv file
 s <- summary(stv.ims)

@@ -14,23 +14,26 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 	# votes are to be read. A tab delimited file produced by excel
 	# will be in the right format, with the candidate names in the first row.
 	#
-	# The argument mcan is number of candidates to be elected
+	# The argument mcan is number of candidates to be elected.
 	#
 	# If mcan is not supplied it will be assumed that the number of candidates
 	# to be elected is half the number of candidates standing.
 	#
 	# If verbose=T, the progress of the count will be printed
+    # The quiet argument if set to TRUE, it shuts all outputs off.
 	#
 	# The program was written by Bernard Silverman for the IMS in August 2002
+    #
+    # Equal ranking added November 2020.
 	##################################
 	
-    if(equal.ranking)
-        return(stve(votes, mcan, eps = eps, equal.ranking = TRUE, fsep = fsep, 
-                    verbose = verbose, seed = seed, quiet = quiet, ...))
     
-  if(verbose) {
+  if(verbose && !quiet) {
     cat("\nSingle transferable vote count")
-    cat("\n==============================\n")
+    if(equal.ranking) cat(" with equal preferences")
+    cat("\n===================================")
+    if(equal.ranking) cat("=======================")
+    cat("\n")
   }
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
@@ -53,7 +56,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 	#
 	
 	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
-	x <- check.votes(votes, "stv", quiet = quiet)
+	x <- if(!equal.ranking) check.votes(votes, "stv", quiet = quiet) else check.votes(votes, "condorcet", quiet = quiet)
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)
 	
@@ -79,8 +82,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 		# calculate quota and total first preference votes
 		#
 	    count <- count + 1
-	    #if(count == 3) stop("")
-		vcast <- apply(w * (x == 1), 2, sum)
+	    A <- (x == 1)/rowSums(x == 1) # splits 1st votes if there are more than one first ranking per vote
+	    A[is.na(A)] <- 0
+        wD <- w * A
+		vcast <- apply(wD, 2, sum)
 		names(vcast) <- cnames
 		quota <- sum(vcast)/(mcan + 1) + eps
 		result.quota <- c(result.quota, quota)
@@ -91,10 +96,6 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 		    df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
 		    rownames(df) <- count
 		    print(df)
-		    #cat("\nData:\n")
-		    #print(x)
-		    #cat("\nWeights:\n")
-		    #print(w * (x == 1))
 		}
 		#
 		# if leading candidate exceeds quota, declare elected and adjust weights
@@ -110,7 +111,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 			    tie <- TRUE
 			}
 			index <- (x[, ic] == 1)
-			w[index] <- (w[index] * (vmax - quota))/vmax
+			surplus <- (vmax - quota)/vmax
+			# The two ways of computing weights should be equivalent, but the first way could be faster.
+			w[index] <- if(!equal.ranking) w[index] * surplus
+			                else rowSums(wD[index, ]) - wD[index, ic] + wD[index, ic] * surplus
 			mcan <- mcan - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
@@ -171,7 +175,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 	}
 	rownames(result.pref) <- 1:count
 	result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
-	               elect.elim=result.elect, data=orig.x, 
+	               elect.elim=result.elect, equal.pref.allowed = equal.ranking, data=orig.x, 
 	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
 	               class="vote.stv")
 	if(!quiet) print(summary(result))
@@ -256,15 +260,17 @@ summary.vote.stv <- function(object, ...) {
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- ncol(object$preferences)
   attr(df, "number.of.seats") <- length(object$elected)
+  attr(df, "equal.pref.allowed") <- object$equal.pref.allowed
   return(df)
 }
 
 print.summary.vote.stv <- function(x, ...) {
   cat("\nResults of Single transferable vote")
+  if(attr(x, "equal.pref.allowed")) cat(" with equal preferences")
   cat("\n===================================")
+  if(attr(x, "equal.pref.allowed")) cat("=======================")
   election.info(x)
   print(kable(x, align='r', ...))
-  #cat("\nElected:", paste(x$Elected[x$Elected != ""], collapse=", "), "\n\n")
   cat("\nElected:", paste(x['Elected', x['Elected',] != ""], collapse=", "), "\n\n")
 }
 
@@ -331,180 +337,5 @@ plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.si
     g <- g + geom_line(data = dfq, aes(x = Count), color = "black") + xlab(xlab) + ylab(ylab)
     g <- g + geom_point(data = dfe, aes(shape = selection), size = point.size) + ylim(range(0, max(dfl$value, dfq$value)))
     g
-}
-
-
-stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t', verbose = FALSE, seed = 1234, ...) {
-    ###################################
-    # This is an experimental version of STV that allows for equal ranking
-    ###################################
-    # The argument votes (matrix or data frame) contains the votes themselves.
-    # Row i of the matrix contains the preferences of voter i
-    # numbered 1, 2, .., r, 0,0,0,0, in some order
-    # If equal ranking is used, the rank after an equal rank must be the one as if there would not be an equal rank.
-    # E.g. 1,1,3,4,..., or 1,2,3,3,3,6,..., but NOT 1,1,2,3,...,or NOT 1,2,3,3,3,5,6,...
-    # The columns of the matrix correspond to the candidates.
-    # The dimnames of the columns are the names of the candidates; if these
-    # are not supplied then the candidates are lettered A, B, C, ...
-    #
-    # If votes is a character string it is interpreted as a file name from which the
-    # votes are to be read. A tab delimited file produced by excel
-    # will be in the right format, with the candidate names in the first row.
-    #
-    # The argument mcan is number of candidates to be elected
-    #
-    # If mcan is not supplied it will be assumed that the number of candidates
-    # to be elected is half the number of candidates standing.
-    #
-    # If verbose=T, the progress of the count will be printed
-    #
-    # The program was written by Bernard Silverman for the IMS in August 2002
-    ##################################
-    
-    if(verbose) {
-        cat("\nSingle transferable vote count with equal ranking (experimental)")
-        cat("\n================================================================\n")
-    }
-    # Prepare by finding names of candidates 
-    votes <- prepare.votes(votes, fsep=fsep)
-    nc <- ncol(votes)
-    cnames <- colnames(votes)
-    
-    mcan <- check.nseats(mcan, nc, default=floor(nc/2))	
-    elected <- NULL
-    
-    #
-    # The next step is to remove invalid votes. 
-    # A warning is printed out for each invalid vote, but the votes are
-    # not counted. 
-    if(verbose) cat("Number of votes cast is", nrow(votes), "\n")
-    x <- if(equal.ranking) check.votes(votes, "condorcet") else check.votes(votes, "stv")
-    nvotes <- nrow(x)
-
-    # Create elimination ranking using forwards tie-breaking
-    ftb <- ranking.forwards.tiebreak(x, nc, seed)
-    tie.elim.rank <- ftb[[1]]
-    sampled <- ftb[[2]]
-    
-    # initialize results
-    result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, dimnames=list(NULL, cnames))
-    result.quota <- c()
-    orig.x <- x
-    
-    #
-    # the main loop
-    #
-    if(verbose) cat("\nList of 1st preferences in STV counts: \n")
-    
-    count <- 0
-    first.vcast <- NULL
-    w <- rep(1, nvotes)
-    
-    while(mcan > 0) {
-        #
-        # calculate quota and total first preference votes
-        #
-        count <- count + 1
-        A <- (x == 1)/rowSums(x == 1) # splits 1st votes if there are more than one first ranking per voter
-        A[is.na(A)] <- 0
-        wD <- w * A
-        vcast <- apply(wD, 2, sum) # points for each candidate
-        names(vcast) <- cnames
-        quota <- sum(vcast)/(mcan + 1) + eps
-        result.quota <- c(result.quota, quota)
-        result.pref <- rbind(result.pref, vcast)
-        result.elect <- rbind(result.elect, rep(0,nc))
-        if(verbose) {
-            cat("\nCount:" , count, "\n")
-            df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
-            #df <- data.frame(QUOTA=round(quota, 3), mcan = mcan, t(round(vcast, 3)))
-            rownames(df) <- count
-            print(df)
-            #cat("\nWeights:\n")
-            #print(w)
-            #cat("\nwD:\n")
-            #print(wD)
-        }
-        #
-        # if leading candidate exceeds quota, declare elected and adjust weights
-        # mark candidate for elimination in subsequent counting
-        #
-        vmax <- max(vcast)
-        if(vmax >= quota) {
-            ic <- (1:nc)[vcast == vmax]
-            tie <- FALSE
-            if(length(ic) > 1) {# tie
-                iic <- which.max(tie.elim.rank[ic])
-                ic <- ic[iic]
-                tie <- TRUE
-            }
-            winner.index <- (x[, ic] == 1) # which votes had the winner as first preference
-            w[winner.index] <- rowSums(wD[winner.index, ]) - wD[winner.index, ic] + wD[winner.index, ic] * (vmax - quota)/vmax
-            mcan <- mcan - 1
-            elected <- c(elected, cnames[ic])
-            result.elect[count,ic] <- 1
-            if(verbose) {
-                cat("Candidate", cnames[ic], "elected ")
-                if(tie) {
-                    cat("using forwards tie-breaking method ")
-                    if(sampled[ic]) cat("(sampled)")
-                }
-                cat("\n")
-            }
-        } else {
-            # if no candidate reaches quota, mark lowest candidate for elimination
-            #
-            if(is.null(first.vcast)) { # first time elimination happens
-                # keep initial count of first preferences after redistributing
-                first.vcast <- vcast
-                names(first.vcast) <- cnames
-                first.vcast[colSums(result.elect) > 0] <- 1 # don't allow zeros for already elected candidates
-            }
-            # if there are candidates with zero first votes, eliminate those first
-            zero.eliminated <- FALSE
-            if(any(first.vcast == 0)) { 
-                vmin <- min(first.vcast)
-                ic <- (1:nc)[first.vcast == vmin]
-                zero.eliminated <- TRUE
-            } else {
-                vmin <- min(vcast[vcast > 0])
-                ic <- (1:nc)[vcast == vmin]
-            }
-            tie <- FALSE
-            if(length(ic) > 1) {# tie
-                iic <- which.min(tie.elim.rank[ic])
-                ic <- ic[iic]
-                tie <- TRUE
-            }
-            result.elect[count,ic] <- -1
-            if(verbose) {
-                cat("Candidate", cnames[ic], "eliminated ")
-                if(zero.eliminated) cat("due to zero first preferences ")
-                if(tie) {
-                    cat("using forwards tie-breaking method ")
-                    if(sampled[ic]) cat("(sampled)")
-                }
-                cat("\n")
-            }
-            if(zero.eliminated)	first.vcast[ic] <- 1
-            loser.index <- (x[, ic] == 1)
-        }
-        # redistribute votes
-        for(i in (1:nvotes)) {
-            jp <- x[i, ic]
-            if(jp > 0) {
-                index <- (x[i, ] > jp)
-                x[i, index] <- x[i, index] - 1
-                x[i, ic] <- 0
-            }
-        }
-    }
-    rownames(result.pref) <- 1:count
-    result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
-                             elect.elim=result.elect, data=orig.x, 
-                             invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
-                        class="vote.stv")
-    print(summary(result))
-    invisible(result)
 }
 
