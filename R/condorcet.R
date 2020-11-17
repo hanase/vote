@@ -117,3 +117,6 @@ print.summary.vote.condorcet <- function(x, ...) {
 view.vote.condorcet <- function(object, ...) 
     view.vote.approval(object, ...)
 
+image.vote.condorcet <- function(object, ...) 
+    image.vote.stv(object, ...)
+

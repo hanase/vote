@@ -1,6 +1,7 @@
 import(formattable)
 importFrom("knitr", "kable")
 importFrom("utils", "read.table")
+importFrom("fields", "image.plot")
 import(data.table)
 
 export(
@@ -33,3 +34,4 @@ S3method(view, vote.score)
 S3method(summary, vote.condorcet)
 S3method(print, summary.vote.condorcet)
 S3method(view, vote.condorcet)
+S3method(image, vote.condorcet)

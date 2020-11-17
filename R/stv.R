@@ -1,4 +1,5 @@
-stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed = 1234, quiet = FALSE, ...) {
+stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '\t', 
+                verbose = FALSE, seed = 1234, quiet = FALSE, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -23,6 +24,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	# The program was written by Bernard Silverman for the IMS in August 2002
 	##################################
 	
+    if(equal.ranking)
+        return(stve(votes, mcan, eps = eps, equal.ranking = TRUE, fsep = fsep, 
+                    verbose = verbose, seed = seed, quiet = quiet, ...))
+    
   if(verbose) {
     cat("\nSingle transferable vote count")
     cat("\n==============================\n")
@@ -53,39 +58,9 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	w <- rep(1, nvotes)
 	
 	# Create elimination ranking using forwards tie-breaking
-	# element ij in matrix nij is the number of j-th preferences
-	# for candidate i
-	nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
-	# ranking for each preference
-	nij.ranking <- apply(nij, 2, rank, ties.method="min")
-	rnk <- nij.ranking[,1]
-	dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
-	sampled <- rep(FALSE, length(rnk))
-	# resolve ranking duplicates by moving to the next column
-    if(any(dpl)) {
-        if(!is.null(seed)) set.seed(seed)
-	    for(pref in 1:nc) {
-	        if(! pref %in% rnk[dpl]) next
-	        j <- 2
-	        rnk[rnk == pref] <- NA
-	        while(any(is.na(rnk))) {
-	            # which candidates to resolve
-	            in.game <- is.na(rnk)
-	            # if we moved across all columns and there are 
-	            # still duplicates, determine the rank randomly
-	            if(j > ncol(nij)) { 
-	                rnk[in.game] <- sample(sum(in.game)) + pref - 1
-	                sampled <- sampled | in.game
-	                break
-	            }
-	            rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
-	            dplj <- rnk == pref & (duplicated(rnk) | duplicated(rnk, fromLast = TRUE))
-	            rnk[dplj] <- NA
-	            j <- j + 1
-	        }
-	    }
-    }
-	tie.elim.rank <- rnk
+	ftb <- ranking.forwards.tiebreak(x, nc, seed)
+	tie.elim.rank <- ftb[[1]]
+	sampled <- ftb[[2]]
 	
 	# initialize results
 	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
@@ -104,6 +79,7 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 		# calculate quota and total first preference votes
 		#
 	    count <- count + 1
+	    #if(count == 3) stop("")
 		vcast <- apply(w * (x == 1), 2, sum)
 		names(vcast) <- cnames
 		quota <- sum(vcast)/(mcan + 1) + eps
@@ -115,6 +91,10 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 		    df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
 		    rownames(df) <- count
 		    print(df)
+		    #cat("\nData:\n")
+		    #print(x)
+		    #cat("\nWeights:\n")
+		    #print(w * (x == 1))
 		}
 		#
 		# if leading candidate exceeds quota, declare elected and adjust weights
@@ -198,6 +178,43 @@ stv <- function(votes, mcan = NULL, eps=0.001, fsep='\t', verbose = FALSE, seed 
 	invisible(result)
 }
 
+ranking.forwards.tiebreak <- function(x, nc, seed = NULL) {
+    # Create elimination ranking using forwards tie-breaking
+    # element ij in matrix nij is the number of j-th preferences
+    # for candidate i
+    nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
+    # ranking for each preference
+    nij.ranking <- apply(nij, 2, rank, ties.method="min")
+    rnk <- nij.ranking[,1]
+    dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
+    sampled <- rep(FALSE, length(rnk))
+    # resolve ranking duplicates by moving to the next column
+    if(any(dpl)) {
+        if(!is.null(seed)) set.seed(seed)
+        for(pref in 1:nc) {
+            if(! pref %in% rnk[dpl]) next
+            j <- 2
+            rnk[rnk == pref] <- NA
+            while(any(is.na(rnk))) {
+                # which candidates to resolve
+                in.game <- is.na(rnk)
+                # if we moved across all columns and there are 
+                # still duplicates, determine the rank randomly
+                if(j > ncol(nij)) { 
+                    rnk[in.game] <- sample(sum(in.game)) + pref - 1
+                    sampled <- sampled | in.game
+                    break
+                }
+                rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
+                dplj <- rnk == pref & (duplicated(rnk) | duplicated(rnk, fromLast = TRUE))
+                rnk[dplj] <- NA
+                j <- j + 1
+            }
+        }
+    }
+    return(list(rnk, sampled))
+}
+
 summary.vote.stv <- function(object, ...) {
   ncounts <- nrow(object$preferences)
   df <- data.frame(matrix(NA, nrow=ncol(object$preferences)+3, ncol=2*ncounts-1),
@@ -261,27 +278,32 @@ view.vote.stv <- function(object, ...) {
  formattable(s, formatter, ...)
 }
 
-image.vote.stv <- function(object, xpref = 1, ypref = 2, all.pref = FALSE, ...) {
+image.vote.stv <- function(object, xpref = 1, ypref = 2, all.pref = FALSE, proportion = FALSE, ...) {
     nc <- ncol(object$preferences)
     x <- object$data
     if(all.pref) {
         nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
-        image(x = 1:nc, y = 1:nc, nij[,nc:1], axes = FALSE, xlab = "", ylab = "ranking")
-        axis(2, at = 1:nc, labels = nc:1)
-        axis(3, at = 1:nc, labels = FALSE, tick = FALSE)
-        text(1:nc, y = par("usr")[4], labels = colnames(object$preferences), xpd = NA, srt = 45, adj = 0)
+        image.plot(x = 1:nc, y = 1:nc, t(nij[nc:1,]), axes = FALSE, xlab = "", ylab = "",
+                   col = hcl.colors(12, "YlOrRd", rev = TRUE))
+        axis(3, at = 1:nc, labels = 1:nc)
+        axis(2, at = 1:nc, labels = rev(colnames(object$preferences)), tick = FALSE, las = 2)
+        mtext("Ranking", side = 1, line = 0.5)
     } else {
         xdt <- data.table(x)
         xdt[, voter := 1:nrow(x)]
         xdtl <- melt(xdt, id.vars = "voter", variable.name = "candidate", value.name = "rank")
         xdtl <- xdtl[rank %in% c(xpref, ypref)]
         xdtw <- dcast(xdtl, voter ~ rank, value.var = "candidate")
-        colnames(xdtw)[2:3] <- c("xpref", "ypref")
+        setnames(xdtw, as.character(xpref), "xpref")
+        setnames(xdtw, as.character(ypref), "ypref")
         ctbl <- table(xdtw[, ypref], xdtw[, xpref])
-        image(x = 1:nc, y = 1:nc, t(ctbl[nc:1,]), axes = FALSE, xlab = paste("rank", xpref), ylab = paste("rank", ypref))
+        if(proportion) ctbl <- ctbl/rowSums(ctbl)
+        image.plot(x = 1:nc, y = 1:nc, t(ctbl[nc:1,]), axes = FALSE, xlab = "", ylab = "", 
+              col = hcl.colors(12, "YlOrRd", rev = TRUE))
         axis(2, at = nc:1, labels = rownames(ctbl), tick = FALSE, las = 1)
-        axis(3, at = 1:nc, tick = FALSE, labels = FALSE)
         text(1:nc, y = par("usr")[4], labels = colnames(ctbl), xpd = NA, srt = 45, adj = 0)
+        mtext(paste("Preference", ypref), side = 4, line = 0.1)
+        mtext(paste("Preference", xpref), side = 1, line = 0.5)
     }
 }
 
@@ -312,13 +334,15 @@ plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.si
 }
 
 
-stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', verbose = FALSE, seed = 1234, ...) {
+stve <- function(votes, mcan = NULL, eps=0.001, equal.ranking = FALSE, fsep='\t', verbose = FALSE, seed = 1234, ...) {
     ###################################
-    # Single transferable vote.
-    # Adopted from Bernard Silverman's code.
+    # This is an experimental version of STV that allows for equal ranking
+    ###################################
     # The argument votes (matrix or data frame) contains the votes themselves.
     # Row i of the matrix contains the preferences of voter i
     # numbered 1, 2, .., r, 0,0,0,0, in some order
+    # If equal ranking is used, the rank after an equal rank must be the one as if there would not be an equal rank.
+    # E.g. 1,1,3,4,..., or 1,2,3,3,3,6,..., but NOT 1,1,2,3,...,or NOT 1,2,3,3,3,5,6,...
     # The columns of the matrix correspond to the candidates.
     # The dimnames of the columns are the names of the candidates; if these
     # are not supplied then the candidates are lettered A, B, C, ...
@@ -338,12 +362,10 @@ stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', v
     ##################################
     
     if(verbose) {
-        cat("\nSingle transferable vote count")
-        cat("\n==============================\n")
+        cat("\nSingle transferable vote count with equal ranking (experimental)")
+        cat("\n================================================================\n")
     }
-    # Prepare by finding names of candidates and setting up
-    # vector w of vote weights and list of elected candidates
-    
+    # Prepare by finding names of candidates 
     votes <- prepare.votes(votes, fsep=fsep)
     nc <- ncol(votes)
     cnames <- colnames(votes)
@@ -352,71 +374,25 @@ stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', v
     elected <- NULL
     
     #
-    # The next step is to remove invalid votes. A vote is invalid if
-    # the preferences are not numbered in consecutively increasing order.
+    # The next step is to remove invalid votes. 
     # A warning is printed out for each invalid vote, but the votes are
-    # not counted. If necessary, it is possible to correct errors in the
-    # original x matrix.
-    # If x is generated from an excel spreadsheet, then the jth vote will
-    # be in row (j-1) of the spreadsheet.
-    #
-    
+    # not counted. 
     if(verbose) cat("Number of votes cast is", nrow(votes), "\n")
-    x <- if(allow.indf) check.votes(votes, "condorcet") else check.votes(votes, "stv")
+    x <- if(equal.ranking) check.votes(votes, "condorcet") else check.votes(votes, "stv")
     nvotes <- nrow(x)
-    w <- rep(1, nvotes)
-    
-    freqfcn <- function(r) {
-        y <- table(r)
-        y[as.character(r)]
-    }
-    freq <- t(apply(x, 1, freqfcn))
-    colnames(freq) <- cnames
-    
+
     # Create elimination ranking using forwards tie-breaking
-    # element ij in matrix nij is the number of j-th preferences
-    # for candidate i
-    nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
-    # ranking for each preference
-    nij.ranking <- apply(nij, 2, rank, ties.method="min")
-    rnk <- nij.ranking[,1]
-    dpl <- duplicated(rnk) | duplicated(rnk, fromLast = TRUE)
-    sampled <- rep(FALSE, length(rnk))
-    # resolve ranking duplicates by moving to the next column
-    if(any(dpl)) {
-        if(!is.null(seed)) set.seed(seed)
-        for(pref in 1:nc) {
-            if(! pref %in% rnk[dpl]) next
-            j <- 2
-            rnk[rnk == pref] <- NA
-            while(any(is.na(rnk))) {
-                # which candidates to resolve
-                in.game <- is.na(rnk)
-                # if we moved across all columns and there are 
-                # still duplicates, determine the rank randomly
-                if(j > ncol(nij)) { 
-                    rnk[in.game] <- sample(sum(in.game)) + pref - 1
-                    sampled <- sampled | in.game
-                    break
-                }
-                rnk[in.game] <- rank(nij.ranking[in.game, j], ties.method="min") + pref - 1
-                dplj <- rnk == pref & (duplicated(rnk) | duplicated(rnk, fromLast = TRUE))
-                rnk[dplj] <- NA
-                j <- j + 1
-            }
-        }
-    }
-    tie.elim.rank <- rnk
+    ftb <- ranking.forwards.tiebreak(x, nc, seed)
+    tie.elim.rank <- ftb[[1]]
+    sampled <- ftb[[2]]
     
     # initialize results
-    result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
-                                        dimnames=list(NULL, cnames))
-    wA <- wAtmp <- prev.wA <- matrix(0, ncol=nc, nrow=nvotes, 
-                         dimnames=list(NULL, cnames))
-    Dmat <- matrix(FALSE, ncol=nc, nrow=nvotes, 
-                   dimnames=list(NULL, cnames))
+    result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, dimnames=list(NULL, cnames))
+    wA <- wAadd <- wAtmp <- matrix(0, ncol=nc, nrow=nvotes, dimnames=list(NULL, cnames))
+    Dmat <- matrix(FALSE, ncol=nc, nrow=nvotes, dimnames=list(NULL, cnames))
     result.quota <- c()
     orig.x <- x
+    
     #
     # the main loop
     #
@@ -424,96 +400,65 @@ stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', v
     
     count <- 0
     first.vcast <- NULL
-    cumw <- rep(0, nvotes)
-    
-    prev.wA[] <- 1
-    wAadd <- wA
-    wAadd[] <- 0
     winner.index <- loser.index <- NULL
-    A <- (x == 1)/freq
-    wAadd[A < 1] <- A[A < 1]
-    wAtmp[] <- 1
+    wA[] <- wAtmp[] <- 1
+    A <- (x == 1)/rowSums(x == 1)
+    wAadd[A < 1] <- A[A < 1] # matrix of additive weights
+    
     while(mcan > 0) {
         #
         # calculate quota and total first preference votes
         #
         count <- count + 1
-        wA[] <- 1
-        #if(count > 1) stop("")
-        #wA <- if(count == 2) A*Dmat else wA + wA*Dmat # keep previous weighted A matrix
-        #wd <- w*A
-        #overfl <- overfl + w*
-        #Dmat <- (rowSums(A) < 1) * A > 0
-        A <- (x == 1)/rowSums(x == 1)
-        #if(count == 4) stop('')
-        #stop("")
-        #vcast <- apply(w*A + wA, 2, sum)
-        if(!is.null(winner.index)) {
-            if(count > 1 && any(Dmat)) {
-                A[apply(Dmat, 1, any), ic] <- 1
+        A <- (x == 1)/rowSums(x == 1) # splits 1st votes if there are more than one first ranking per voter
+        A[is.na(A)] <- 0
+        #if(count == 3) stop("")
+        if(!is.null(winner.index)) { # there was a candidate elected in the previous count
+            if(any(Dmat)) { # there is a split first vote in prior count 
+                A[apply(Dmat, 1, any), ic] <- 1 # this removes prior split with the winner
                 A <- A/rowSums(A)
             }
-            #wi <- which(winner.index)
-            distr <- (vmax - quota)/vmax
-            #for(j in 1:length(wi)) {
-            #    recp <- A[wi[j],] > 0
-            #    wA[wi[j], recp] <- wA[wi[j], recp] * distr
-            #}
-            #wA[winner.index, ] <- wA[winner.index, ] * distr * (A[winner.index,] > 0) + wA[winner.index, ] * (A[winner.index,] == 0)
+            distr <- (vmax - quota)/vmax # surplus
+            # distribute surplus and add it to the previous weights
+            # wAtmp assures the weights are not added to the elected and eliminated candidates
+            for(i in which(winner.index))
+                A[i, x[i,] == 1] <- A[i, x[i,] == 1] * wA[i, ic]
             wAadd[winner.index, ] <- (wAadd[winner.index, ] + distr * A[winner.index,]) * wAtmp[winner.index,]
-            #wd <- wA * A
-            #stop('')
         } else {
-            if(length(loser.index) > 0) {
+            if(length(loser.index) > 0) { # there was a candidate eliminated in the previous count
+                for(i in which(loser.index))
+                    A[i, x[i,] == 1] <- A[i, x[i,] == 1] * wA[i, ic]
                 part1 <- loser.index & apply(Dmat, 1, any) # first position did not move
                 part2 <- loser.index & !apply(Dmat, 1, any) # second position became first position
                 wAadd[part1, ] <- wAadd[part1, ] + wAadd[part1, ]*Dmat[part1,]/rowSums(Dmat[part1,,drop = FALSE])
                 wAadd[part2, ] <- wAadd[part2, ] + A[part2, ]
             }
         }
-
+        wAprev <- wA
+        wA[] <- 1
         wA[wAadd > 0] <- wAadd[wAadd > 0]
-        
-        #wA <- wA + prev.wA*Dmat
-        prev.wA <- wA
-        vcast <- apply(wA * wAtmp * (A > 0), 2, sum)
-        #vcast <- apply(wA * A, 2, sum)
-        #vcast <- apply(cumw * (x == 1), 2, sum)
+        vcast <- apply(wA * wAtmp * (A > 0), 2, sum) # points for each candidate
         names(vcast) <- cnames
         quota <- sum(vcast)/(mcan + 1) + eps
         result.quota <- c(result.quota, quota)
         result.pref <- rbind(result.pref, vcast)
         result.elect <- rbind(result.elect, rep(0,nc))
-        #this.cumw <- rep(0, nvotes)
         if(verbose) {
             cat("\nCount:" , count, "\n")
-            #df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
-            df <- data.frame(QUOTA=round(quota, 3), mcan = mcan, t(round(vcast, 3)))
+            df <- data.frame(QUOTA=round(quota, 3), t(round(vcast[vcast != 0], 3)))
+            #df <- data.frame(QUOTA=round(quota, 3), mcan = mcan, t(round(vcast, 3)))
             rownames(df) <- count
             print(df)
-            cat("\nData:\n" )
-            print(x)
-            #cat("\nWeights:\n" )
-            #print(w)
-            cat("\nwA:\n" )
-            print(wA * wAtmp)
-            cat("\nWeighted data:\n" )
-            print(wA * wAtmp* (A > 0))
-            cat("\nA:\n" )
-            print(A)
-            cat("\nDmat:\n" )
-            print(1*(Dmat))
-            #cat("\nprev.wd * Dmat:\n" )
-            #print(prev.wd * Dmat)
-            #cat("\nprev.wd:\n" )
-            #print(prev.wd)
+            #cat("\nWeights:\n")
+            #print(wA * wAtmp * (A > 0))
+            #cat("\nwAprev:\n")
+            #print(wAprev)
         }
         #
         # if leading candidate exceeds quota, declare elected and adjust weights
         # mark candidate for elimination in subsequent counting
         #
         winner.index <- NULL
-        #prev.wd <- wA * A + prev.wd * Dmat
         vmax <- max(vcast)
         if(vmax >= quota) {
             ic <- (1:nc)[vcast == vmax]
@@ -523,12 +468,7 @@ stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', v
                 ic <- ic[iic]
                 tie <- TRUE
             }
-            index <- (x[, ic] == 1)
-            #this.cumw[index] <- this.cumw[index] + (vmax - quota)/vmax
-            w[index] <- (w[index] * (vmax - quota))/vmax
-            #if(count > 0)stop('')
-            winner.index <- index
-            #w[index] <- w[index] + (vmax - quota)/vmax
+            winner.index <- (x[, ic] == 1) # which votes had the winner as first preference
             mcan <- mcan - 1
             elected <- c(elected, cnames[ic])
             result.elect[count,ic] <- 1
@@ -545,7 +485,7 @@ stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', v
             #
             if(is.null(first.vcast)) { # first time elimination happens
                 # keep initial count of first preferences after redistributing
-                first.vcast <- apply(w * (x == 1), 2, sum)
+                first.vcast <- vcast
                 names(first.vcast) <- cnames
                 first.vcast[colSums(result.elect) > 0] <- 1 # don't allow zeros for already elected candidates
             }
@@ -579,23 +519,21 @@ stvi <- function(votes, mcan = NULL, allow.indf = FALSE, eps=0.001, fsep='\t', v
             loser.index <- (x[, ic] == 1)
         }
         # redistribute votes
-        #first.votes <- x[,ic] == 1
         Dmat[] <- FALSE
         for(i in (1:nvotes)) {
             jp <- x[i, ic]
             if(jp > 0) {
                 index <- (x[i, ] > jp)
-                index.distr <- x[i, ] == jp    # for indifferent votes
+                index.distr <- x[i, ] == jp    # for equal ranks
                 x[i, index] <- x[i, index] - 1
                 x[i, ic] <- 0
-                Dmat[i, index.distr & x[i, ] == jp] <- TRUE # record if ordering did not change after redistribution
-                #prev.wd[i, ic] <- 0
+                Dmat[i, index.distr & x[i, ] == jp] <- TRUE # record if rank did not change after redistribution
                 wAtmp[i, ic] <- 0
-            } 
+            }
         }
+        wAtmp[apply(x, 1, sum) == 0,] <- 0 # zero out votes that have no more ranking
     }
     rownames(result.pref) <- 1:count
-    #cat("\nElected candidates are, in order of election: \n", paste(elected, collapse = ", "), "\n")
     result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
                              elect.elim=result.elect, data=orig.x, 
                              invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
