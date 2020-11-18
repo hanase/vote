@@ -284,13 +284,13 @@ view.vote.stv <- function(object, ...) {
  formattable(s, formatter, ...)
 }
 
-image.vote.stv <- function(object, xpref = 1, ypref = 2, all.pref = FALSE, proportion = FALSE, ...) {
+image.vote.stv <- function(object, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, ...) {
     nc <- ncol(object$preferences)
     x <- object$data
     if(all.pref) {
         nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
         image.plot(x = 1:nc, y = 1:nc, t(nij[nc:1,]), axes = FALSE, xlab = "", ylab = "",
-                   col = hcl.colors(12, "YlOrRd", rev = TRUE))
+                   col = hcl.colors(12, "YlOrRd", rev = TRUE), ...)
         axis(3, at = 1:nc, labels = 1:nc)
         axis(2, at = 1:nc, labels = rev(colnames(object$preferences)), tick = FALSE, las = 2)
         mtext("Ranking", side = 1, line = 0.5)
@@ -305,7 +305,7 @@ image.vote.stv <- function(object, xpref = 1, ypref = 2, all.pref = FALSE, propo
         ctbl <- table(xdtw[, ypref], xdtw[, xpref])
         if(proportion) ctbl <- ctbl/rowSums(ctbl)
         image.plot(x = 1:nc, y = 1:nc, t(ctbl[nc:1,]), axes = FALSE, xlab = "", ylab = "", 
-              col = hcl.colors(12, "YlOrRd", rev = TRUE))
+              col = hcl.colors(12, "YlOrRd", rev = TRUE), ...)
         axis(2, at = nc:1, labels = rownames(ctbl), tick = FALSE, las = 1)
         text(1:nc, y = par("usr")[4], labels = colnames(ctbl), xpd = NA, srt = 45, adj = 0)
         mtext(paste("Preference", ypref), side = 4, line = 0.1)
