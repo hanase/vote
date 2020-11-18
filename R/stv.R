@@ -320,8 +320,7 @@ plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.si
     df <- data.table(object$preferences)
     df[, Count := 1:nrow(df)]
     dfl <- melt(df, id.vars = "Count", variable.name = "Candidate")
-    # remove zeros from elected and eliminated candidates
-    dfl <- dfl[!(Candidate %in% names(colSums(abs(object$elect.elim)) > 0) & value == 0)] 
+    dfl <- rbind(dfl, dfl[Count == 1][, Count := 0]) # add Count 0 with initial values
     
     # dataset for plotting the quota
     dfq <- data.table(Count = 1:length(object$quotas), value = object$quotas, Candidate = "Quota")
@@ -332,10 +331,15 @@ plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.si
     dfe[, selection := ifelse(value > 0, "elected", "eliminated")]
     dfe <- dfe[dfl, value := i.value, on = c("Count", "Candidate")]
     
+    # remove data after candidates are selected
+    dfl[dfe, count.select := i.Count, on = "Candidate"]
+    dfl <- dfl[is.na(count.select) | Count <= count.select]
+    
     # create plots
     g <- ggplot(dfl, aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + geom_line()
-    g <- g + geom_line(data = dfq, aes(x = Count), color = "black") + xlab(xlab) + ylab(ylab)
+    g <- g + geom_line(data = dfq, aes(x = as.factor(Count)), color = "black") + xlab(xlab) + ylab(ylab)
     g <- g + geom_point(data = dfe, aes(shape = selection), size = point.size) + ylim(range(0, max(dfl$value, dfq$value)))
+    g <- g + annotate(geom="text", x=as.factor(1), y=dfq[Count == 1, value], label="Quota", hjust = "right")
     g
 }
 
