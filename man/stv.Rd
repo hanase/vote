@@ -5,6 +5,8 @@
 \alias{view}
 \alias{print.summary.vote.stv}
 \alias{vote.stv}
+\alias{image.vote.stv}
+\alias{plot.vote.stv}
 
 \title{
 Single Transferable Vote
@@ -20,9 +22,11 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 \method{view}{vote.stv}(object, \dots)
 
-\method{plot}{vote.stv}(object, \dots)
+\method{plot}{vote.stv}(object, xlab = "Count", ylab = "Preferences", 
+  point.size = 2, \dots)
 
-\method{image}{vote.stv}(object, \dots)
+\method{image}{vote.stv}(object, xpref = 2, ypref = 1, 
+  all.pref = FALSE, proportion = FALSE, \dots)
 }
 
 \arguments{
@@ -35,17 +39,24 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}
-  \item{\dots}{Not used.}
   \item{object}{Object of class \code{vote.stv}.}
+  \item{xlab, ylab}{Labels of the x- and y-axis.}
+  \item{point.size}{Size of the points in the plot.}
+  \item{xpref, ypref}{Preference for the x- and y-axis, respectively, for showing the joined distribution of the votes. It is not used if \code{all.pref} is \code{TRUE}.}
+  \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
+  \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis.}
+  \item{\dots}{Additional arguments passed to the underlying functions.}
 }
 \details{
 For a description of the single transferable vote system see \url{https://imstat.org/elections/single-transferable-voting-system}.
 
 The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 
-By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. However, for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. 
+By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected but a warning is issued.
 
 Ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
+
+The \code{plot} function draws the total scores for each candidate as lines. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). In both cases these can be shown as proportions (if \code{proportion=TRUE}). 
 }
 
 \value{
@@ -55,7 +66,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{quotas}{Vector of quotas, one for each count.}
 \item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
 \item{equal.pref.allowed}{Input argument \code{equal.ranking}.}
-\item{data}{Input data with invalid votes removed.}
+\item{data}{Input data (possibly corrected) with invalid votes removed.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 }
 

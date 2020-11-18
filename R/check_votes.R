@@ -14,7 +14,6 @@ check.votes.condorcet <- function(record, ...) {
   # ranking after the gap caused by same ranking must continue as if there would be no gap
   first.after.zero <- which(diff(c(0, diff(c(0, cumszeros)))) < 0)
   if(length(first.after.zero) < 1) return(check.votes.stv(record, ...)) # no indifferent votes
-  #if(all(record == c(1, 1, 3, 3, 0))) stop('')
   # check first gap
   if(d[first.after.zero[1]] != cumszeros[first.after.zero[1]] + 1) return(FALSE)
   # replace checked values in the r object with missing ranking
@@ -74,3 +73,14 @@ prepare.votes <- function(data, fsep="\n") {
   return(x)
 }
 
+preprocess.votes.for.equal.ranking <- function(data){
+  do.rank <- function(x){
+    res <- rep(0, length(x))
+    res[x > 0] <- rank(x[x > 0], ties.method = "min")
+    res
+  }
+  v <- t(apply(data, 1, do.rank))
+  dif <- rowSums(v != data)
+  if(any(dif > 0)) warning("Votes ", paste(which(dif>0), collapse = ", "), " were preprocessed to comply with the required format.\n")
+  return(v)
+}
