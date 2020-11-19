@@ -289,19 +289,20 @@ view.vote.stv <- function(object, ...) {
  formattable(s, formatter, ...)
 }
 
-image.vote.stv <- function(object, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, ...) {
-    nc <- ncol(object$preferences)
-    x <- object$data
+image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, ...) {
+    voter <- NULL # to avoid warnings of the CRAN check
+    xd <- x$data
+    nc <- ncol(xd)
     if(all.pref) {
-        nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
-        image.plot(x = 1:nc, y = 1:nc, t(nij[nc:1,]), axes = FALSE, xlab = "", ylab = "",
+        nij <- sapply(1:nc, function(pref) apply(xd, 2, function(f) sum(f == pref)))[nc:1,]
+        image.plot(x = 1:nc, y = 1:nc, t(nij), axes = FALSE, xlab = "", ylab = "",
                    col = hcl.colors(12, "YlOrRd", rev = TRUE), ...)
         axis(3, at = 1:nc, labels = 1:nc)
-        axis(2, at = 1:nc, labels = rev(colnames(object$preferences)), tick = FALSE, las = 2)
+        axis(2, at = 1:nc, labels = rev(colnames(xd)), tick = FALSE, las = 2)
         mtext("Ranking", side = 1, line = 0.5)
     } else {
-        xdt <- data.table(x)
-        xdt[, voter := 1:nrow(x)]
+        xdt <- data.table(xd)
+        xdt[, voter := 1:nrow(xd)]
         xdtl <- melt(xdt, id.vars = "voter", variable.name = "candidate", value.name = "rank")
         xdtl <- xdtl[rank %in% c(xpref, ypref)]
         xdtw <- dcast(xdtl, voter ~ rank, value.var = "candidate")
@@ -318,20 +319,21 @@ image.vote.stv <- function(object, xpref = 2, ypref = 1, all.pref = FALSE, propo
     }
 }
 
-plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {
-    stopifnot(require("ggplot2"))
+plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {
+    stopifnot(requireNamespace("ggplot2", quietly = TRUE))
+    Count <- value <- selection <- i.value <- count.select <- Candidate <- i.Count <- NULL # to avoid warnings of the CRAN check
     # Plot evolution of the preferences
     # prepare data in the long format
-    df <- data.table(object$preferences)
+    df <- data.table(x$preferences)
     df[, Count := 1:nrow(df)]
     dfl <- melt(df, id.vars = "Count", variable.name = "Candidate")
     dfl <- rbind(dfl, dfl[Count == 1][, Count := 0]) # add Count 0 with initial values
     
     # dataset for plotting the quota
-    dfq <- data.table(Count = 1:length(object$quotas), value = object$quotas, Candidate = "Quota")
+    dfq <- data.table(Count = 1:length(x$quotas), value = x$quotas, Candidate = "Quota")
     
     # dataset for plotting points of elected and eliminated candidates
-    dfe <- melt(data.table(Count = 1:nrow(object$elect.elim), object$elect.elim), id.vars = "Count", variable.name = "Candidate")
+    dfe <- melt(data.table(Count = 1:nrow(x$elect.elim), x$elect.elim), id.vars = "Count", variable.name = "Candidate")
     dfe <- dfe[value != 0]
     dfe[, selection := ifelse(value > 0, "elected", "eliminated")]
     dfe <- dfe[dfl, value := i.value, on = c("Count", "Candidate")]
@@ -341,10 +343,10 @@ plot.vote.stv <- function(object, xlab = "Count", ylab = "Preferences", point.si
     dfl <- dfl[is.na(count.select) | Count <= count.select]
     
     # create plots
-    g <- ggplot(dfl, aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + geom_line()
-    g <- g + geom_line(data = dfq, aes(x = as.factor(Count)), color = "black") + xlab(xlab) + ylab(ylab)
-    g <- g + geom_point(data = dfe, aes(shape = selection), size = point.size) + ylim(range(0, max(dfl$value, dfq$value)))
-    g <- g + annotate(geom="text", x=as.factor(1), y=dfq[Count == 1, value], label="Quota", hjust = "right")
+    g <- ggplot2::ggplot(dfl, ggplot2::aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + ggplot2::geom_line()
+    g <- g + ggplot2::geom_line(data = dfq, ggplot2::aes(x = as.factor(Count)), color = "black") + ggplot2::xlab(xlab) + ggplot2::ylab(ylab)
+    g <- g + ggplot2::geom_point(data = dfe, ggplot2::aes(shape = selection), size = point.size) + ggplot2::ylim(range(0, max(dfl$value, dfq$value)))
+    g <- g + ggplot2::annotate(geom="text", x=as.factor(1), y=dfq[Count == 1, value], label="Quota", hjust = "right")
     g
 }
 

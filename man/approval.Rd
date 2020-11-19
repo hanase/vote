@@ -15,16 +15,16 @@
 Approval and Plurality Vote Count
 }
 \description{
-Count votes using the approval and plurality method. Each voter can select  candidates using  1 for a selection and 0 otherwise. In the approval method, any number of candidates can be selected by a voter, while in the plurality method only one candidate can be chosen by a voter. Thus, plurality voting is a special case of approval voting. The winner(s) in either method is/are the most-approved candidate(s).
+Count votes using the approval and plurality methods. Each voter can select  candidates using  1 for a selection and 0 otherwise. In the approval method, any number of candidates can be selected by a voter, while in the plurality method only one candidate can be chosen by a voter. Thus, plurality voting is a special case of approval voting. The winner(s) in either method is/are the most-approved candidate(s).
 }
 \usage{
-approval(votes, mcan = 1, fsep = "\t", ...)
+approval(votes, mcan = 1, fsep = "\t", quiet = FALSE, \dots)
 
 \method{summary}{vote.approval}(object, \dots)
 
 \method{view}{vote.approval}(object, \dots)
 
-plurality(votes, mcan = 1, fsep = "\t", ...)
+plurality(votes, mcan = 1, fsep = "\t", quiet = FALSE, \dots)
 
 \method{summary}{vote.plurality}(object, \dots)
 
@@ -34,9 +34,10 @@ plurality(votes, mcan = 1, fsep = "\t", ...)
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame of zeros and ones containing the votes. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as the name of the tab-separated file from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros.}
+  \item{votes}{Matrix or data frame of zeros and ones containing the votes. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros.}
   \item{mcan}{Number of candidates to be elected.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+  \item{quiet}{If \code{TRUE} no output is printed.}
   \item{\dots}{Not used.}
   \item{object}{Object of class \code{vote.approval} or \code{vote.plurality}.}
 }

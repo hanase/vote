@@ -27,7 +27,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     cdc.winner <- apply(points, 1, function(p) sum(p) == nc-1)
     cdc.loser <- apply(points, 1, function(p) sum(p) == 0)
     runoff.winner <- ro.part <- ro.part.first <- NULL
-    if(sum(cdc.winner) == 0 && runoff) { # instant run-off
+    if(sum(cdc.winner) == 0 && runoff) { # run-off
         nwins <- rowSums(points)
         winner.exists <- FALSE
         cand.names <- cnames
@@ -118,6 +118,6 @@ print.summary.vote.condorcet <- function(x, ...) {
 view.vote.condorcet <- function(object, ...) 
     view.vote.approval(object, ...)
 
-image.vote.condorcet <- function(object, ...) 
-    image.vote.stv(object, ...)
+image.vote.condorcet <- function(x, ...) 
+    image.vote.stv(x, ...)
 

@@ -22,15 +22,13 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 \method{view}{vote.stv}(object, \dots)
 
-\method{plot}{vote.stv}(object, xlab = "Count", ylab = "Preferences", 
-  point.size = 2, \dots)
+\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, \dots)
 
-\method{image}{vote.stv}(object, xpref = 2, ypref = 1, 
-  all.pref = FALSE, proportion = FALSE, \dots)
+\method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, \dots)
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a tab-separated file name from which the votes are to be read. See below for more details.}
+  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. See below for more details.}
   \item{mcan}{Number of candidates to be elected. By default it is half the number of candidates standing.}
   \item{eps}{Value added to the quota. I.e. the STV quota is computed as \cr
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
@@ -39,12 +37,12 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}
-  \item{object}{Object of class \code{vote.stv}.}
+  \item{object, x}{Object of class \code{vote.stv}.}
   \item{xlab, ylab}{Labels of the x- and y-axis.}
   \item{point.size}{Size of the points in the plot.}
   \item{xpref, ypref}{Preference for the x- and y-axis, respectively, for showing the joined distribution of the votes. It is not used if \code{all.pref} is \code{TRUE}.}
   \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
-  \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis.}
+  \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis. Only available when \code{all.pref} is \code{FALSE}.}
   \item{\dots}{Additional arguments passed to the underlying functions.}
 }
 \details{
@@ -52,11 +50,11 @@ For a description of the single transferable vote system see \url{https://imstat
 
 The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 
-By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected but a warning is issued.
+By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,\dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected and a warning is issued.
 
 Ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
 
-The \code{plot} function draws the total scores for each candidate as lines. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). In both cases these can be shown as proportions (if \code{proportion=TRUE}). 
+The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown as proportions (if \code{proportion=TRUE}). 
 }
 
 \value{

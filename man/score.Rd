@@ -12,7 +12,8 @@ Score Vote Count
 Count votes using the score (or range) method. Voters give each candidate a score, the scores are added  and the candidate(s) with the highest (or lowest) totals is/are elected.
 }
 \usage{
-score(votes, mcan = 1, max.score = NULL, larger.wins = TRUE, fsep = "\t", ...)
+score(votes, mcan = 1, max.score = NULL, larger.wins = TRUE, 
+  fsep = "\t", quiet = FALSE, \dots)
 
 \method{summary}{vote.score}(object, \dots)
 
@@ -21,11 +22,12 @@ score(votes, mcan = 1, max.score = NULL, larger.wins = TRUE, fsep = "\t", ...)
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame containing the votes which should be numbers between 0 and \code{max.score}. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a tab-separated file name from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros.}
+  \item{votes}{Matrix or data frame containing the votes which should be numbers between 0 and \code{max.score}. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros.}
   \item{mcan}{Number of candidates to be elected.}
   \item{max.score}{Maximum score allowed. It is used to remove invalid votes. If not given, the maximum value contained in the data is taken and thus, all non-negative votes are valid.}
   \item{larger.wins}{Logical argument indicating whether the winners are the candidates with the highest scores (default) or the lowest scores.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+  \item{quiet}{If \code{TRUE} no output is printed.}
   \item{\dots}{Not used.}
   \item{object}{Object of class \code{vote.score}.}
 }

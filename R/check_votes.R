@@ -82,5 +82,6 @@ preprocess.votes.for.equal.ranking <- function(data){
   v <- t(apply(data, 1, do.rank))
   dif <- rowSums(v != data)
   if(any(dif > 0)) warning("Votes ", paste(which(dif>0), collapse = ", "), " were preprocessed to comply with the required format.\n")
+  colnames(v) <- colnames(data)
   return(v)
 }
