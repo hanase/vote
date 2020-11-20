@@ -63,6 +63,7 @@ check.nseats <- function(nseats, ncandidates, default=1) {
   rownames(df) <- NULL
   df <- rbind(df, c('', sum(df$Total), ''))
   rownames(df)[nrow(df)] <- "Sum"
+  attr(df, "align") <- c("l", "r", "c")
   attr(df, "number.of.votes") <- nrow(object$data)
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- length(object$totals)
@@ -86,8 +87,8 @@ election.info <- function(x) {
 
 .print.summary.vote <- function(x, ...) {
 	election.info(x)
-  	print(kable(x, ...))
-  	cat("\nElected:", paste(x$Candidate[x$Elected == "x"], collapse=", "), "\n\n")
+  	print(kable(x, align = attr(x, "align"), ...))
+  	cat("\nElected:", paste(x$Candidate[trimws(x$Elected) == "x"], collapse=", "), "\n\n")
 }
 
 print.summary.vote.approval <- function(x, ...) {
@@ -99,7 +100,7 @@ print.summary.vote.approval <- function(x, ...) {
 view.vote.approval <- function(object, ...) {
   s <- summary(object)
   col_formatter <- formatter("span",
-            style = x ~ style(background = ifelse(x %in% s$Candidate[s$Elected=="x"], "lightgreen", "transparent")
+            style = x ~ style(background = ifelse(x %in% s$Candidate[trimws(s$Elected)=="x"], "lightgreen", "transparent")
                               #width = "20px" # doesn't work
                               ))
   formattable(s, list(Candidate=col_formatter), ...)

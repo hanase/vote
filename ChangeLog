@@ -2,9 +2,13 @@
 -----
 Added condorcet function (thanks to Salvatore Barbaro).
 
+Added tworound.runoff (thanks to Salvatore Barbaro).
+
 Added option of equal ranking for stv and condorcet.
 
-Added image function for stv and condorcet and plot function for stv.
+Added image function for stv, condorcet and tworound.runoff.
+
+Added plot function for stv.
 
 Package now depends on ggplot2 (suggests) and imports fields and data.table.
 

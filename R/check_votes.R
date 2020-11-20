@@ -43,6 +43,10 @@ check.votes.score <- function(record, max.score, ...) {
   return(all(record %in% 0:max.score))
 }
 
+check.votes.tworound.runoff <- function(record, ...) {
+  return(check.votes.stv(record, ...))
+}
+
 is.valid.vote <- function(x, method, ...) {
   return(apply(x, 1, paste0("check.votes.", method), ...))
 }

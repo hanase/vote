@@ -70,19 +70,23 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
 summary.vote.condorcet <- function(object, ...) {
     df <- data.frame(object$totals, stringsAsFactors=FALSE)
     df$Total <- rowSums(object$totals)
+    attr(df, "align") <- rep("r", ncol(df))
     if(!is.null(object$elected)) {
         df$Winner <- rep("", nrow(df))
         df[object$elected, "Winner"] <- "x"
+        attr(df, "align") <- c(attr(df, "align"), "c")
     }
     if(!is.null(object$loser)) {
         df$Loser <- rep("", nrow(df))
         df[object$loser, "Loser"] <- "x"
+        attr(df, "align") <- c(attr(df, "align"), "c")
     }
     if(!is.null(object$runoff.participants)) {
         df$Runoff <- rep("", nrow(df))
         df[setdiff(object$runoff.participants, object$runoff.winner), "Runoff"] <- "o"
         if(!is.null(object$runoff.winner))
             df[object$runoff.winner, "Runoff"] <- "x"
+        attr(df, "align") <- c(attr(df, "align"), "c")
     }
     attr(df, "number.of.votes") <- nrow(object$data)
     attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
@@ -101,7 +105,7 @@ print.summary.vote.condorcet <- function(x, ...) {
     cat("\nResults of Condorcet voting")
     cat("\n===========================")
     election.info(x)
-    print(kable(x, ...))
+    print(kable(x, align = attr(x, "align"), ...))
     if(is.null(attr(x, "condorcet.winner")))
         cat("\nThere is no condorcet winner (no candidate won over all other candidates).")
     else

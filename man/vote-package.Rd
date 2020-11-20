@@ -17,9 +17,10 @@ The following voting methods are available:
 score within a specific range.
 \item \link{approval}: Voters give each candidate one (approve) or zero (not approve).
 \item \link{plurality}: Each voter chooses one candidate.
-\item \link{condorcet}: Voters rank candidates in order. The winner is determined by pairwise comparisons.
+\item \link{condorcet}: Voters rank candidates in order. The winner is determined in pairwise comparisons.
+\item \link{tworound.runoff}: Two-round majority system with ranked ballots. If no candidate gets the majority, there is a run-off between the top two candidates. 
 }
-Output of these functions can be viewed using \code{summary} methods, or in a browser using \code{view} methods. The \code{summary} methods return a data frame which can be stored in a file, see Example below. Outputs of the \code{\link{stv}} method can be plotted in a graph. The joint and marginal distributions of ranked votes (for \code{\link{stv}} and \code{\link{condorcet}}) can be visualized in an image plot. 
+Output of these functions can be viewed using \code{summary} methods, or in a browser using \code{view} methods. The \code{summary} methods return a data frame which can be stored in a file, see Example below. Outputs of the \code{\link{stv}} method can be plotted in a graph. The joint and marginal distributions of ranked votes (for \code{\link{stv}}, \code{\link{condorcet}} and \code{\link{tworound.runoff}}) can be visualized in an image plot. 
 
 Functions \code{\link{invalid.votes}} and \code{\link{valid.votes}} can be used to check the validity of ballots for the various methods.
 
