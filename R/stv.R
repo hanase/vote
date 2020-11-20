@@ -57,7 +57,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 	
 	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
 	if(equal.ranking) 
-	    votes <- preprocess.votes.for.equal.ranking(votes)
+	    votes <- correct.ranking(votes, quiet = quiet)
     x <-  check.votes(votes, "stv", equal.ranking = equal.ranking, quiet = quiet)
 	
 	nvotes <- nrow(x)

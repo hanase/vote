@@ -7,6 +7,7 @@
 \alias{vote.stv}
 \alias{image.vote.stv}
 \alias{plot.vote.stv}
+\alias{correct.ranking}
 
 \title{
 Single Transferable Vote
@@ -25,6 +26,8 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 \method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, \dots)
 
 \method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, \dots)
+
+correct.ranking(votes, quiet = FALSE)
 }
 
 \arguments{
@@ -50,7 +53,9 @@ For a description of the single transferable vote system see \url{https://imstat
 
 The input data \code{votes} is structured as follows: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 
-By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,\dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected and a warning is issued.
+By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,\dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected and a warning is issued by calling the \code{correct.ranking} function. 
+
+The \code{correct.ranking} function does the above correction for all records, regardless if they contain duplicates or not. It can either be used by calling it explicitely, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE}. The function is also called from within the \code{\link{condorcet}} function.
 
 Ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
 
@@ -109,7 +114,14 @@ write.csv(s, "myfile.csv")}
 # voting committee members (uses tie-breaking)
 votes <- data.frame(C1=c(3,2,1,3), C2=c(2,1,2,4),
                     C3=c(4,3,3,1), C4=c(1,4,4,2))
-stv(votes, mcan = 2, verbose = TRUE)                    
+stv(votes, mcan = 2, verbose = TRUE)
+
+# Example with equal ranking and correction
+votes <- data.frame(C1=c(3,2,1,3), C2=c(1,1,2,0),
+                    C3=c(4,3,3,1), C4=c(1,4,2,2))
+stv(votes, mcan = 2, equal.ranking = TRUE)
+# vote #3 was corrected by stv which used this data:
+correct.ranking(votes, quiet = TRUE)
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")

@@ -38,7 +38,7 @@ If the \code{runoff} argument is set to \code{TRUE} and no Condorcet winner exis
 
 The input data \code{votes} is structured the same way as for the \code{\link{stv}} method: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order, while equal preferences are allowed. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
 
-Note that if equal preferences are used, they are automatically converted into a format where for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. It is the same ranking as one would obtain with \code{rank(x, ties.method = "min")}. If a conversion of a vote occurs, a warning is issued.
+Note that if equal preferences are used, they are automatically converted into a format where for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. It is the same ranking as one would obtain with \code{rank(x, ties.method = "min")}. If a conversion of a vote occurs, a warning is issued. That is done internally by calling the \code{\link{correct.ranking}} function.
 
 The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) given by \code{xpref} and \code{ypref}, as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown as proportions (if \code{proportion=TRUE}).
 }

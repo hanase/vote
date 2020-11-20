@@ -64,15 +64,16 @@ prepare.votes <- function(data, fsep="\n") {
   return(x)
 }
 
-preprocess.votes.for.equal.ranking <- function(data){
+correct.ranking <- function(votes, quiet = FALSE){
   do.rank <- function(x){
     res <- rep(0, length(x))
     res[x > 0] <- rank(x[x > 0], ties.method = "min")
     res
   }
-  v <- t(apply(data, 1, do.rank))
-  dif <- rowSums(v != data)
-  if(any(dif > 0)) warning("Votes ", paste(which(dif>0), collapse = ", "), " were preprocessed to comply with the required format.\n")
-  colnames(v) <- colnames(data)
+  v <- t(apply(votes, 1, do.rank))
+  dif <- rowSums(v != votes)
+  if(any(dif > 0) && !quiet) warning("Votes ", paste(which(dif>0), collapse = ", "), " were corrected to comply with the required format.\n")
+  colnames(v) <- colnames(votes)
+  rownames(v) <- rownames(votes)
   return(v)
 }
