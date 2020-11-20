@@ -18,7 +18,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     votes <- prepare.votes(votes, fsep=fsep)
     nc <- ncol(votes)
     cnames <- colnames(votes)
-    x <- check.votes(correct.ranking(x, quiet = quiet), "condorcet", quiet = quiet)
+    x <- check.votes(correct.ranking(votes, quiet = quiet), "condorcet", quiet = quiet)
     mcan <- check.nseats(1, ncol(x))
     x2 <- x
     x2[x2 == 0] <- max(x2) + 1 # give not-ranked candidates the worst ranking
