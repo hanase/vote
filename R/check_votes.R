@@ -1,34 +1,13 @@
 check.votes.stv <- function(record, ...) {
-  if(! 1 %in% record) return(FALSE)
+  if(any(! (record %in% 0:length(record))) || ! 1 %in% record) return(FALSE)
   z <- sort(diff(c(0, diff(sort(c(0, record))), 1)))
   return(z[length(record)] == 0 && z[length(record) + 1] == 1)
 }
 
 check.votes.condorcet <- function(record, ...) {
   if(any(! (record %in% 0:length(record))) || ! 1 %in% record) return(FALSE)
-  # check indifferent votes
-  r <- sort(record[record > 0])
-  r <- c(r, length(r) + 1)
-  d <- diff(c(0, r)) # zero means no increase in voting (i.e. the same ranking used for multiple candidates)
-  cumszeros <- cumsum(d == 0) 
-  # ranking after the gap caused by same ranking must continue as if there would be no gap
-  first.after.zero <- which(diff(c(0, diff(c(0, cumszeros)))) < 0)
-  if(length(first.after.zero) < 1) return(check.votes.stv(record, ...)) # no indifferent votes
-  # check first gap
-  if(d[first.after.zero[1]] != cumszeros[first.after.zero[1]] + 1) return(FALSE)
-  # replace checked values in the r object with missing ranking
-  r[(first.after.zero[1]- d[first.after.zero[1]]):(first.after.zero[1]- 1)] <- seq(r[(first.after.zero[1]- d[first.after.zero[1]])], length = d[first.after.zero[1]])
-  # check remaining gaps
-  if(length(first.after.zero) > 1) {
-    for(i in 2:length(first.after.zero)){
-      if((i < length(first.after.zero)) && d[first.after.zero[i]] != cumszeros[first.after.zero[i]] - sum(cumszeros[first.after.zero[-(1:(i-1))]]) + 1) 
-        return(FALSE)
-      r[(first.after.zero[i]- d[first.after.zero[i]]):(first.after.zero[i]- 1)] <- seq(r[(first.after.zero[i]- d[first.after.zero[i]])], length = d[first.after.zero[i]])
-    }  
-  }
-  # Object r is the record where indifferent votes are replaced by the corresponding ranking.
-  # It should now contain ordinary ranking (without gaps), just like for stv
-  return(check.votes.stv(r, ...))
+  should.be <- rank(record[record > 0], ties.method = "min")
+  return(all(record[record > 0] == should.be))
 }
 
 check.votes.approval <- function(record, ...) {
