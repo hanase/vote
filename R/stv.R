@@ -32,7 +32,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
         cat("\nSingle transferable vote count")
         if(equal.ranking) cat(" with equal preferences")
         cat("\n===================================")
-        if(equal.ranking) cat("=======================")
+        if(equal.ranking) cat("==================")
         cat("\n")
     }
 	# Prepare by finding names of candidates and setting up
@@ -56,11 +56,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 	#
 	
 	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
-	if(equal.ranking) {
-	    x <- preprocess.votes.for.equal.ranking(votes)
-	    x <- check.votes(x, "condorcet", quiet = quiet)
-	} else
-	    x <-  check.votes(votes, "stv", quiet = quiet)
+	if(equal.ranking) 
+	    votes <- preprocess.votes.for.equal.ranking(votes)
+    x <-  check.votes(votes, "stv", equal.ranking = equal.ranking, quiet = quiet)
 	
 	nvotes <- nrow(x)
 	w <- rep(1, nvotes)

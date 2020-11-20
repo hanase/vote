@@ -1,7 +1,11 @@
-check.votes.stv <- function(record, ...) {
+check.votes.stv <- function(record, equal.ranking = FALSE, ...) {
   if(any(! (record %in% 0:length(record))) || ! 1 %in% record) return(FALSE)
-  z <- sort(diff(c(0, diff(sort(c(0, record))), 1)))
-  return(z[length(record)] == 0 && z[length(record) + 1] == 1)
+  if(!equal.ranking){
+    z <- sort(diff(c(0, diff(sort(c(0, record))), 1)))
+    return(z[length(record)] == 0 && z[length(record) + 1] == 1)
+  }
+  # check for equal ranking
+  return(all(record[record > 0] == rank(record[record > 0], ties.method = "min")))
 }
 
 check.votes.condorcet <- function(record, ...) {
@@ -37,9 +41,13 @@ check.votes <- function(x, ..., quiet = FALSE) {
   return(x[ok, ])
 }
 
-assemble.args.for.check.score <- function(x, max.score=NULL, ...) {
+assemble.args.for.check.score <- function(x, max.score = NULL, ...) {
   if(is.null(max.score)  || max.score < 1) max.score <- max(x)
   return(list(max.score=max.score))
+}
+
+assemble.args.for.check.stv <- function(x, equal.ranking = FALSE, ...) {
+  return(list(equal.ranking=equal.ranking))
 }
 
 prepare.votes <- function(data, fsep="\n") {
