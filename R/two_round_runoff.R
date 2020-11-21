@@ -32,7 +32,7 @@ tworound.runoff <- function(votes, fsep = '\t', quiet = FALSE, ...) {
 
 
 summary.vote.tworound.runoff <- function(object, ...) {
-    df <- .summary.vote(object)
+    df <- .summary.vote(object, reorder = FALSE)
     df[, "Percent"] <- c(round(object$totals/sum(object$totals)*100, 1), 100)
     attr(df, "align") <- c(attr(df, "align"), "r")
     if(!is.null(object$totals2r)) {

@@ -55,10 +55,10 @@ check.nseats <- function(nseats, ncandidates, default=1) {
 	return(nseats)
 }
 
-.summary.vote <- function(object, larger.wins=TRUE) {
+.summary.vote <- function(object, larger.wins=TRUE, reorder = TRUE) {
   df <- data.frame(Candidate=names(object$totals), Total=object$totals, 
                    Elected="", stringsAsFactors=FALSE)
-  df <- df[order(df$Total, decreasing=larger.wins),]
+  if(reorder) df <- df[order(df$Total, decreasing=larger.wins),]
   df[object$elected, "Elected"] <- "x"
   rownames(df) <- NULL
   df <- rbind(df, c('', sum(df$Total), ''))
