@@ -16,22 +16,26 @@ tworound.runoff <- function(votes, fsep = '\t', seed = 1234, quiet = FALSE, ...)
     res <- sum.votes(x == 1)
     winners <- res/nvotes > 0.5
     resoff <- NULL
-    coin.toss.winner <- coin.toss.runoff <- FALSE
+    coin.toss.winner <- coin.toss.runoff <- seed.set <- FALSE
     if(sum(winners) > 1 || !any(winners)) { 
         # second round
         best <- res == max(res)
         if(sum(best) > 2) { # more than 2 candidates have the best score - sample two of them  
+            if(!is.null(seed)) set.seed(seed)
             idx <- sample(which(best), 2)
             best[] <- FALSE
             best[idx] <- TRUE
             coin.toss.runoff <- TRUE
+            seed.set <- TRUE
         }
         if(sum(best) < 2) {
             second.best <- which(res == max(res[res < max(res)])) # second best results
             if(length(second.best) > 1) {
                 # more than 1 candidate has the second best score - sample one of them 
+                if(!is.null(seed) && !seed.set) set.seed(seed)
                 second.best <- sample(second.best, 1)
                 coin.toss.runoff <- TRUE
+                seed.set <- TRUE
             }
             best[second.best] <- TRUE
         }
@@ -46,6 +50,7 @@ tworound.runoff <- function(votes, fsep = '\t', seed = 1234, quiet = FALSE, ...)
     }
     winner.index <- which(res.elect == max(res.elect))
     if(length(winner.index) > 1) {# tie
+        if(!is.null(seed) && !seed.set) set.seed(seed)
         winner.index <- sample(winner.index, 1)
         coin.toss.winner <- TRUE
     }

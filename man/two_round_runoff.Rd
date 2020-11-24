@@ -13,7 +13,7 @@
     Count votes using the two-round voting method with ranked ballots. If no candidate reaches the majority, the top two candidates go into a run-off.
 }
 \usage{
-tworound.runoff(votes, fsep = '\t', quiet = FALSE, \dots)
+tworound.runoff(votes, fsep = '\t', seed = 1234, quiet = FALSE, \dots)
     
 \method{summary}{vote.tworound.runoff}(object, \dots)
     
@@ -25,6 +25,7 @@ tworound.runoff(votes, fsep = '\t', quiet = FALSE, \dots)
 \arguments{
     \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. See below for more details.}
     \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+    \item{seed}{Integer. Seed of the random number generator (RNG). Only used if there are ties either between candidates to enter the run-off, or between the two run-off contenders. If set to \code{NULL}, the RNG is not initialized.}
     \item{quiet}{If \code{TRUE} no output is printed.}
     \item{object, x}{Object of class \code{vote.tworound.runoff}.}
     \item{\dots}{Additional arguments passed to the underlying functions. For the \code{image} function, see arguments for \code{\link{image.vote.stv}}, especially \code{xpref}, \code{ypref}, \code{all.pref} and \code{proportion}.}
@@ -42,15 +43,19 @@ tworound.runoff(votes, fsep = '\t', quiet = FALSE, \dots)
         \item{elected}{The elected candidate.}
     \item{totals}{Vector of total votes in the same order as candidates (columns) in the input data.}
     \item{totals2r}{Vector of total votes from the run-off (second round).}
+    \item{coin.toss.winner}{\code{TRUE} if the winner was sampled between candidates with the same score, otherwise \code{FALSE}.}
+    \item{coin.toss.runoff}{\code{TRUE} if the run-off contenders were sampled from candidates with the same score. Otherwise it is \code{FALSE}.}
     \item{data}{Input data (possibly corrected) with invalid votes removed.}
     \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 }
 
 \author{
-Hana Sevcikova (thanks to Salvatore Barbaro)
+Hana Sevcikova, Salvatore Barbaro
 }
 
 \references{
+Sen A. (2017). Collective Choice and Social Welfare. Harvard University Press, Cambridge, Massachusetts, Chapter 10*3 (p. 243ff).
+
 https://en.wikipedia.org/wiki/Two-round_system
 }
 
