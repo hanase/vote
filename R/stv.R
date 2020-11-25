@@ -229,16 +229,18 @@ summary.vote.stv <- function(object, ..., digits = 3) {
   rownames(df) <- c("Quota", colnames(object$preferences), "Elected", "Eliminated")
   colnames(df) <- c(1, paste0(rep(2:ncounts, each=2), c("-trans", "")))
   idxcols <- c(1, seq(3,ncol(df), by=2))
-  df["Quota", idxcols] <- round(object$quotas, digits)
-  df[2:(nrow(df)-2), idxcols] <- round(t(object$preferences), digits)
+  df["Quota", idxcols] <- object$quotas
+  df[2:(nrow(df)-2), idxcols] <- t(object$preferences)
   # calculate transfers
   pref <- object$preferences
   # remove quotas for winners and compute difference
   where.winner <- which(rowSums(object$elect.elim==1)==1)
   pref[where.winner,] <- pref[where.winner,] - object$elect.elim[where.winner,]*object$quotas[where.winner]
-  tmp <- t(round(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], digits))
+  tmp <- t(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),])
   if(nrow(tmp) == 1) tmp <- as.numeric(tmp) # because of R weirdness with vectors and matrices (when there is just one round)
   df[2:(nrow(df)-2), seq(2,ncol(df), by=2)] <- tmp
+  # format the right number of digits
+  df[1:(nrow(df)-2),] <- apply(df[1:(nrow(df)-2),], 2, function(d) ifelse(!is.na(d), format(round(d, digits), digits = digits), ""))
   where.elim <- which(rowSums(object$elect.elim==-1)==1)
   cnames <- colnames(object$elect.elim)
   for(i in 1:ncounts) {
