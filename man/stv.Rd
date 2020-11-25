@@ -19,7 +19,7 @@ Count votes using the single transferable voting method, also known as ranked ch
 stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
   fsep = '\t', verbose = FALSE, seed = 1234, quiet = FALSE, \dots)
 
-\method{summary}{vote.stv}(object, \dots)
+\method{summary}{vote.stv}(object, \dots, digits = 3)
 
 \method{view}{vote.stv}(object, \dots)
 
@@ -41,6 +41,7 @@ correct.ranking(votes, quiet = FALSE)
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}
   \item{object, x}{Object of class \code{vote.stv}.}
+  \item{digits}{How many significant digits to be used in the output table.}
   \item{xlab, ylab}{Labels of the x- and y-axis.}
   \item{point.size}{Size of the points in the plot.}
   \item{xpref, ypref}{Preference for the x- and y-axis, respectively, for showing the joined distribution of the votes. It is not used if \code{all.pref} is \code{TRUE}.}
