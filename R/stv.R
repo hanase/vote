@@ -222,21 +222,21 @@ ranking.forwards.tiebreak <- function(x, nc, seed = NULL) {
     return(list(rnk, sampled))
 }
 
-summary.vote.stv <- function(object, ...) {
+summary.vote.stv <- function(object, ..., digits = 3) {
   ncounts <- nrow(object$preferences)
   df <- data.frame(matrix(NA, nrow=ncol(object$preferences)+3, ncol=2*ncounts-1),
                    stringsAsFactors = FALSE)
   rownames(df) <- c("Quota", colnames(object$preferences), "Elected", "Eliminated")
   colnames(df) <- c(1, paste0(rep(2:ncounts, each=2), c("-trans", "")))
   idxcols <- c(1, seq(3,ncol(df), by=2))
-  df["Quota", idxcols] <- round(object$quotas,3)
-  df[2:(nrow(df)-2), idxcols] <- round(t(object$preferences),3)
+  df["Quota", idxcols] <- round(object$quotas, digits)
+  df[2:(nrow(df)-2), idxcols] <- round(t(object$preferences), digits)
   # calculate transfers
   pref <- object$preferences
   # remove quotas for winners and compute difference
   where.winner <- which(rowSums(object$elect.elim==1)==1)
   pref[where.winner,] <- pref[where.winner,] - object$elect.elim[where.winner,]*object$quotas[where.winner]
-  tmp <- t(round(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], 3))
+  tmp <- t(round(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),], digits))
   if(nrow(tmp) == 1) tmp <- as.numeric(tmp) # because of R weirdness with vectors and matrices (when there is just one round)
   df[2:(nrow(df)-2), seq(2,ncol(df), by=2)] <- tmp
   where.elim <- which(rowSums(object$elect.elim==-1)==1)
