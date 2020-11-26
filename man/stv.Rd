@@ -110,6 +110,11 @@ image(stv.ims)
 s <- summary(stv.ims)
 write.csv(s, "myfile.csv")}
 
+# Example of Dublin West 2002 elections
+# https://en.wikipedia.org/wiki/Dublin_West#2002_general_election
+data(dublin_west)
+stv(dublin_west, mcan = 3, eps = 1)
+
 # Example of a small committee dataset
 # with four candidates (C) and four
 # voting committee members (uses tie-breaking)

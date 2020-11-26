@@ -7,6 +7,7 @@ Author: Hana Sevcikova, Bernard Silverman, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
 Description: Counting election votes and determining election results by different methods, 
     including the single transferable vote or ranked choice (Newland and F.S. Britton, 1997; ISBN: 0903291185), approval, score, plurality, condorcet and two-round runoff methods.
+Depends: R (>= 3.5.0)
 Imports: formattable, knitr, data.table, fields
 Suggests: ggplot2
 License: GPL (>=2)

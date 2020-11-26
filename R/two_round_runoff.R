@@ -1,4 +1,4 @@
-tworound.runoff <- function(votes, fsep = '\t', seed = 1234, quiet = FALSE, ...) {
+tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...) {
     do.rank <- function(x){
         res <- rep(0, length(x))
         res[x > 0] <- rank(x[x > 0], ties.method = "min")

@@ -13,7 +13,7 @@
     Count votes using the two-round voting method with ranked ballots. If no candidate reaches the majority, the top two candidates go into a run-off.
 }
 \usage{
-tworound.runoff(votes, fsep = '\t', seed = 1234, quiet = FALSE, \dots)
+tworound.runoff(votes, fsep = '\t', seed = NULL, quiet = FALSE, \dots)
     
 \method{summary}{vote.tworound.runoff}(object, \dots)
     
