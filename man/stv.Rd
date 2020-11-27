@@ -25,7 +25,7 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 \method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, \dots)
 
-\method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, \dots)
+\method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, \dots)
 
 correct.ranking(votes, quiet = FALSE)
 }
@@ -46,7 +46,7 @@ correct.ranking(votes, quiet = FALSE)
   \item{point.size}{Size of the points in the plot.}
   \item{xpref, ypref}{Preference for the x- and y-axis, respectively, for showing the joined distribution of the votes. It is not used if \code{all.pref} is \code{TRUE}.}
   \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
-  \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis. Only available when \code{all.pref} is \code{FALSE}.}
+  \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis, otherwise raw vote counts are shown. Only available when \code{all.pref} is \code{FALSE}.}
   \item{\dots}{Additional arguments passed to the underlying functions.}
 }
 \details{
@@ -60,7 +60,7 @@ The \code{correct.ranking} function does the above correction for all records, r
 
 Ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
 
-The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown as proportions (if \code{proportion=TRUE}). 
+The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown either as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}). 
 }
 
 \value{

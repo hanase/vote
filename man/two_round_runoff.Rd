@@ -35,7 +35,7 @@ tworound.runoff(votes, fsep = '\t', seed = NULL, quiet = FALSE, \dots)
 
     The input data \code{votes} is structured the same way as for the \code{\link{stv}} method: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. Equal preferences are not allowed. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
     
-    The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) given by \code{xpref} and \code{ypref}, as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown as proportions (if \code{proportion=TRUE}).
+    The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) given by \code{xpref} and \code{ypref}, as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}).
 }
 
 \value{

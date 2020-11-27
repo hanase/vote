@@ -223,6 +223,11 @@ ranking.forwards.tiebreak <- function(x, nc, seed = NULL) {
 }
 
 summary.vote.stv <- function(object, ..., digits = 3) {
+    decimalplaces <- function(x) {
+        ifelse(abs(x - round(x)) > .Machine$double.eps^0.5,
+               nchar(sub('^\\d+\\.', '', sub('0+$', '', as.character(x)))),
+               0)
+    }
   ncounts <- nrow(object$preferences)
   df <- data.frame(matrix(NA, nrow=ncol(object$preferences)+3, ncol=2*ncounts-1),
                    stringsAsFactors = FALSE)
@@ -240,7 +245,12 @@ summary.vote.stv <- function(object, ..., digits = 3) {
   if(nrow(tmp) == 1) tmp <- as.numeric(tmp) # because of R weirdness with vectors and matrices (when there is just one round)
   df[2:(nrow(df)-2), seq(2,ncol(df), by=2)] <- tmp
   # format the right number of digits
-  df[1:(nrow(df)-2),] <- apply(df[1:(nrow(df)-2),], 2, function(d) ifelse(!is.na(d), format(round(d, digits), digits = digits), ""))
+  df[1:(nrow(df)-2),] <- apply(df[1:(nrow(df)-2),], 2, 
+                               function(d) 
+                                   ifelse(!is.na(d), 
+                                        format(round(d, digits), 
+                                                nsmall = min(digits, max(decimalplaces(round(d[!is.na(d)], digits))))), 
+                                        ""))
   where.elim <- which(rowSums(object$elect.elim==-1)==1)
   cnames <- colnames(object$elect.elim)
   for(i in 1:ncounts) {
@@ -289,7 +299,7 @@ view.vote.stv <- function(object, ...) {
  formattable(s, formatter, ...)
 }
 
-image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = FALSE, ...) {
+image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, ...) {
     voter <- NULL # to avoid warnings of the CRAN check
     xd <- x$data
     nc <- ncol(xd)
@@ -305,11 +315,17 @@ image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion
         xdt[, voter := 1:nrow(xd)]
         xdtl <- melt(xdt, id.vars = "voter", variable.name = "candidate", value.name = "rank")
         xdtl <- xdtl[rank %in% c(xpref, ypref)]
+        if(sum(duplicated(xdtl[, .(voter, rank)])) > 0)
+            stop("Sorry, the image function is not available for ballots with equal preferences.")
         xdtw <- dcast(xdtl, voter ~ rank, value.var = "candidate")
         setnames(xdtw, as.character(xpref), "xpref")
         setnames(xdtw, as.character(ypref), "ypref")
+        #ctbl <- table(factor(xdtw[, ypref], levels = 1:nc), factor(xdtw[, xpref], levels = 1:nc))
         ctbl <- table(xdtw[, ypref], xdtw[, xpref])
-        if(proportion) ctbl <- ctbl/rowSums(ctbl)
+        if(proportion) {
+            ctbl <- ctbl/rowSums(ctbl)
+            ctbl[is.na(ctbl)] <- 0
+        }
         image.plot(x = 1:nc, y = 1:nc, t(ctbl[nc:1,]), axes = FALSE, xlab = "", ylab = "", 
               col = hcl.colors(12, "YlOrRd", rev = TRUE), ...)
         axis(2, at = nc:1, labels = rownames(ctbl), tick = FALSE, las = 1)
