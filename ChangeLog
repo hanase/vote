@@ -12,6 +12,8 @@ Added plot function for stv.
 
 Package now depends on ggplot2 (suggests) and imports fields and data.table.
 
+Dataset dublin_west added.
+
 1.2-1 (02/01/2020)
 -----
 Elimination of candidates with no first preferences happens after the first votes redistribution.
