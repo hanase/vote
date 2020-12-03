@@ -300,7 +300,7 @@ view.vote.stv <- function(object, ...) {
 }
 
 image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, ...) {
-    voter <- NULL # to avoid warnings of the CRAN check
+    voter <- rank <- NULL # to avoid warnings of the CRAN check
     xd <- x$data
     nc <- ncol(xd)
     if(all.pref) {
@@ -315,12 +315,11 @@ image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion
         xdt[, voter := 1:nrow(xd)]
         xdtl <- melt(xdt, id.vars = "voter", variable.name = "candidate", value.name = "rank")
         xdtl <- xdtl[rank %in% c(xpref, ypref)]
-        if(sum(duplicated(xdtl[, .(voter, rank)])) > 0)
+        if(sum(duplicated(xdtl[, c("voter", "rank"), with = FALSE])) > 0)
             stop("Sorry, the image function is not available for ballots with equal preferences.")
         xdtw <- dcast(xdtl, voter ~ rank, value.var = "candidate")
         setnames(xdtw, as.character(xpref), "xpref")
         setnames(xdtw, as.character(ypref), "ypref")
-        #ctbl <- table(factor(xdtw[, ypref], levels = 1:nc), factor(xdtw[, xpref], levels = 1:nc))
         ctbl <- table(xdtw[, ypref], xdtw[, xpref])
         if(proportion) {
             ctbl <- ctbl/rowSums(ctbl)
