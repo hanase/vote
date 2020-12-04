@@ -1,3 +1,19 @@
+2.0-0 (12/02/2020)
+-----
+Added condorcet function (thanks to Salvatore Barbaro).
+
+Added tworound.runoff (thanks to Salvatore Barbaro).
+
+Added option of equal ranking for stv and condorcet.
+
+Added image function for stv, condorcet and tworound.runoff.
+
+Added plot function for stv.
+
+Package now depends on ggplot2 (suggests) and imports fields and data.table.
+
+Dataset dublin_west added.
+
 1.2-1 (02/01/2020)
 -----
 Elimination of candidates with no first preferences happens after the first votes redistribution.

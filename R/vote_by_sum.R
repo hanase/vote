@@ -1,43 +1,43 @@
-approval <- function(votes, mcan=1, fsep='\t', ...) {
+approval <- function(votes, mcan=1, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
-  x <- check.votes(votes, "approval")
+  x <- check.votes(votes, "approval", quiet = quiet)
   mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   result <- structure(list(elected=elected, totals=res, data=x,
-  					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+  					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
   					class="vote.approval")
-  print(summary(result))
+  if(!quiet) print(summary(result))
   invisible(result)
 }
 
-plurality <- function(votes, mcan=1, fsep='\t', ...) {
+plurality <- function(votes, mcan=1, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
-  x <- check.votes(votes, "plurality")
+  x <- check.votes(votes, "plurality", quiet = quiet)
   mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(rev(sort(res))[1:mcan])
   result <- structure(list(elected=elected, totals=res, data=x,
-              invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+              invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
               class="vote.plurality")
-  print(summary(result))
+  if(!quiet) print(summary(result))
   invisible(result)
 }
 
-score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', ...) {
+score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   if(is.null(max.score) || max.score < 1) {
     max.score <- max(votes)
     warning("Invalid max.score. Set to observed maximum: ", max.score)
   }
-  x <- check.votes(votes, "score", max.score)
+  x <- check.votes(votes, "score", max.score, quiet = quiet)
   mcan <- check.nseats(mcan, ncol(x))
   res <- sum.votes(x)
   elected <- names(sort(res, decreasing=larger.wins)[1:mcan])
   result <- structure(list(elected=elected, totals=res, larger.wins=larger.wins,
-                  data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),]), 
+                  data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
                   class="vote.score")
-  print(summary(result))
+  if(!quiet) print(summary(result))
   invisible(result)
 }
 
@@ -55,14 +55,15 @@ check.nseats <- function(nseats, ncandidates, default=1) {
 	return(nseats)
 }
 
-.summary.vote <- function(object, larger.wins=TRUE) {
+.summary.vote <- function(object, larger.wins=TRUE, reorder = TRUE) {
   df <- data.frame(Candidate=names(object$totals), Total=object$totals, 
                    Elected="", stringsAsFactors=FALSE)
-  df <- df[order(df$Total, decreasing=larger.wins),]
+  if(reorder) df <- df[order(df$Total, decreasing=larger.wins),]
   df[object$elected, "Elected"] <- "x"
   rownames(df) <- NULL
   df <- rbind(df, c('', sum(df$Total), ''))
   rownames(df)[nrow(df)] <- "Sum"
+  attr(df, "align") <- c("l", "r", "c")
   attr(df, "number.of.votes") <- nrow(object$data)
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- length(object$totals)
@@ -86,8 +87,8 @@ election.info <- function(x) {
 
 .print.summary.vote <- function(x, ...) {
 	election.info(x)
-  	print(kable(x, ...))
-  	cat("\nElected:", paste(x$Candidate[x$Elected == "x"], collapse=", "), "\n\n")
+  	print(kable(x, align = attr(x, "align"), ...))
+  	cat("\nElected:", paste(x$Candidate[trimws(x$Elected) == "x"], collapse=", "), "\n\n")
 }
 
 print.summary.vote.approval <- function(x, ...) {
@@ -99,7 +100,7 @@ print.summary.vote.approval <- function(x, ...) {
 view.vote.approval <- function(object, ...) {
   s <- summary(object)
   col_formatter <- formatter("span",
-            style = x ~ style(background = ifelse(x %in% s$Candidate[s$Elected=="x"], "lightgreen", "transparent")
+            style = x ~ style(background = ifelse(x %in% s$Candidate[trimws(s$Elected)=="x"], "lightgreen", "transparent")
                               #width = "20px" # doesn't work
                               ))
   formattable(s, list(Candidate=col_formatter), ...)

@@ -1,7 +1,7 @@
 # vote
 
-[![Travis-CI Build Status](https://travis-ci.org/hanase/vote.svg?branch=cran)](https://travis-ci.org/hanase/vote)
+[![R build status](https://github.com/hanase/vote/workflows/R-CMD-check/badge.svg)](https://github.com/hanase/vote/actions?workflow=R-CMD-check)
 
-R package for counting election votes and determining election results by different methods, including the single transferable vote, approval, score and plurality methods.
+R package for counting election votes and determining election results by different methods, including the single transferable vote (or ranked choice), approval, score, plurality, condorcet and two-round runoff methods.
 
 

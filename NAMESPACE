@@ -1,6 +1,10 @@
 import(formattable)
 importFrom("knitr", "kable")
 importFrom("utils", "read.table")
+importFrom("fields", "image.plot")
+import(data.table)
+importFrom("grDevices", "hcl.colors")
+importFrom("graphics", "axis", "mtext", "par", "text")
 
 export(
     count.votes,
@@ -8,8 +12,11 @@ export(
     approval,
     plurality,
     score,
+    condorcet,
+    tworound.runoff,
     invalid.votes,
     valid.votes,
+    correct.ranking,
     view
 )
 
@@ -17,6 +24,8 @@ export(
 S3method(summary, vote.stv)
 S3method(print, summary.vote.stv)
 S3method(view, vote.stv)
+S3method(plot, vote.stv)
+S3method(image, vote.stv)
 S3method(summary, vote.approval)
 S3method(print, summary.vote.approval)
 S3method(view, vote.approval)
@@ -26,3 +35,11 @@ S3method(view, vote.plurality)
 S3method(summary, vote.score)
 S3method(print, summary.vote.score)
 S3method(view, vote.score)
+S3method(summary, vote.condorcet)
+S3method(print, summary.vote.condorcet)
+S3method(view, vote.condorcet)
+S3method(image, vote.condorcet)
+S3method(summary, vote.tworound.runoff)
+S3method(view, vote.tworound.runoff)
+S3method(image, vote.tworound.runoff)
+S3method(print, summary.vote.tworound.runoff)

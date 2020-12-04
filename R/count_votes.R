@@ -1,4 +1,5 @@
-count.votes <- function(votes, method=c("auto", "plurality", "approval", "stv", "score"), 
+count.votes <- function(votes, method=c("auto", "plurality", "approval", "stv", "score", 
+                                        "condorcet", "tworound.runoff"), 
             fsep='\t', ...) {
   # Main function for counting votes. 
   # If method is "auto" it determines the right method depending on the 
