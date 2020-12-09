@@ -1,4 +1,5 @@
-stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '\t', 
+stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
+                fsep = '\t', ties = c("f", "b"), 
                 verbose = FALSE, seed = 1234, quiet = FALSE, ...) {
 	###################################
 	# Single transferable vote.
@@ -64,9 +65,16 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 	w <- rep(1, nvotes)
 	
 	# Create elimination ranking using forwards tie-breaking
-	ftb <- ranking.forwards.tiebreak(x, nc, seed)
-	tie.elim.rank <- ftb[[1]]
-	sampled <- ftb[[2]]
+	tie.method <- match.arg(ties)
+	tie.method.name <- c(f = "forwards", b = "backwards")
+	
+	if(tie.method == "f") {
+	    ftb <- ranking.forwards.tiebreak(x, nc, seed)
+	    tie.elim.rank <- ftb[[1]]
+	    sampled <- ftb[[2]]
+	} else {
+	    if(!is.null(seed)) set.seed(seed)
+	}
 	
 	# initialize results
 	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
@@ -109,7 +117,13 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 			ic <- (1:nc)[vcast == vmax]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
-			    iic <- which.max(tie.elim.rank[ic])
+			    if(tie.method == "f") 
+			        iic <- which.max(tie.elim.rank[ic])
+			    else {
+			        iica <- backwards.tiebreak(result.pref, ic, elim = FALSE)
+			        iic <- iica[[1]]
+			        sampled <- iica[[2]]
+			    }
 			    ic <- ic[iic]
 			    tie <- TRUE
 			}
@@ -124,7 +138,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 			if(verbose && !quiet) {
 			    cat("Candidate", cnames[ic], "elected ")
 			    if(tie) {
-			        cat("using forwards tie-breaking method ")
+			        cat("using", tie.method.name[tie.method], "tie-breaking method ")
 			        if(sampled[ic]) cat("(sampled)")
 			    }
 			    cat("\n")
@@ -150,7 +164,13 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 		    }
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
-			    iic <- which.min(tie.elim.rank[ic])
+			    if(tie.method == "f")
+			        iic <- which.min(tie.elim.rank[ic])
+			    else { # backwards
+			        iica <- backwards.tiebreak(result.pref, ic)
+			        iic <- iica[[1]]
+			        sampled <- iica[[2]]
+			    }
 			    ic <- ic[iic]
 			    tie <- TRUE
 			}
@@ -159,7 +179,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, fsep = '
 			    cat("Candidate", cnames[ic], "eliminated ")
 			    if(zero.eliminated) cat("due to zero first preferences ")
 			    if(tie) {
-			        cat("using forwards tie-breaking method ")
+			        cat("using", tie.method.name[tie.method], "tie-breaking method ")
 			        if(sampled[ic]) cat("(sampled)")
 			    }
 			    cat("\n")
@@ -220,6 +240,30 @@ ranking.forwards.tiebreak <- function(x, nc, seed = NULL) {
         }
     }
     return(list(rnk, sampled))
+}
+
+backwards.tiebreak <- function(prefs, ic, elim = TRUE) {
+    if(!elim) prefs <- -prefs
+    if(is.null(dim(prefs))) dim(prefs) <- c(1, length(prefs))
+    sampled <- rep(FALSE, ncol(prefs))
+    rnk <- t(apply(prefs, 1, rank, ties.method="min"))
+    if(is.null(dim(rnk))) dim(rnk) <- c(1, length(rnk))
+    i <- nrow(rnk)
+    ic.rnk <- rnk[i, ic]
+    ic.rnk.sort <- sort(ic.rnk)
+    icv <- rep(FALSE, ncol(prefs))
+    icv[ic] <- TRUE
+    while(i > 1 && length(ic.rnk) > 1 && ic.rnk.sort[1] == ic.rnk.sort[2]){
+        ic <- which(icv & (rnk[i, ] == ic.rnk.sort[1]))
+        i <- i - 1
+        ic.rnk <- rnk[i, ic]
+        ic.rnk.sort <- sort(ic.rnk)
+    }
+    if(i == 1 && length(ic.rnk) > 1 && ic.rnk.sort[1] == ic.rnk.sort[2]) { # need sampling
+        selected <- sample(1:length(ic), 1)
+        sampled[ic[selected]] <- TRUE
+    } else selected <- which.min(ic.rnk)
+    return(list(selected, sampled))
 }
 
 summary.vote.stv <- function(object, ..., digits = 3) {

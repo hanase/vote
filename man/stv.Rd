@@ -17,7 +17,8 @@ Count votes using the single transferable voting method, also known as ranked ch
 }
 \usage{
 stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
-  fsep = '\t', verbose = FALSE, seed = 1234, quiet = FALSE, \dots)
+  fsep = '\t', ties = c("f", "b"), verbose = FALSE, 
+  seed = 1234, quiet = FALSE, \dots)
 
 \method{summary}{vote.stv}(object, \dots, digits = 3)
 
@@ -37,6 +38,7 @@ correct.ranking(votes, quiet = FALSE)
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
   \item{equal.ranking}{If \code{TRUE} equal preferences are allowed, see below.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+  \item{ties}{Method used to break ties. By default the forwards tie-braking is used (\dQuote{f}). Value "b" invokes the backwards tie-breaking method, see O’Neill (2004).}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}
@@ -58,7 +60,7 @@ By default the preferences are not allowed to contain duplicates per vote. Howev
 
 The \code{correct.ranking} function does the above correction for all records, regardless if they contain duplicates or not. It can either be used by calling it explicitely, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE}. The function is also called from within the \code{\link{condorcet}} function.
 
-Ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5).
+By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O’Neill (2004).
 
 The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown either as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}). 
 }
@@ -81,6 +83,8 @@ R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single T
 \url{https://imstat.org/elections/single-transferable-voting-system/}
 
 \url{https://en.wikipedia.org/wiki/Single_transferable_vote}
+
+J.C. O’Neill (2004). Tie-Breaking with the Single Transferable Vote. Voting Matters, 18, 14–17. \url{http://www.votingmatters.org.uk/ISSUE18/I18P6.PDF}
 }
 \author{
 Bernard Silverman, Hana Sevcikova, Adrian Raftery
