@@ -1,3 +1,11 @@
+2.0-2 (12//2020)
+-----
+Added backwards tie-breaking to stv.
+
+Added an option for constant quota in stv.
+
+Argument "digits" added to stv.
+
 2.0-0 (12/02/2020)
 -----
 Added condorcet function (thanks to Salvatore Barbaro).

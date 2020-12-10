@@ -28,8 +28,8 @@ data(dublin_west)
 head(dublin_west)
 
 \dontrun{
-# reproduce results from the Wikipedia link above
-dwstv <- stv(dublin_west, mcan = 3, eps = 1)
+# produce similar results as in the Wikipedia link above
+dwstv <- stv(dublin_west, mcan = 3, eps = 1, constant.quota = TRUE)
 
 # plot results
 plot(dwstv)

@@ -1,6 +1,6 @@
 stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
-                fsep = '\t', ties = c("f", "b"), 
-                verbose = FALSE, seed = 1234, quiet = FALSE, ...) {
+                fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
+                verbose = FALSE, seed = 1234, quiet = FALSE, digits = 3, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -98,7 +98,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
         wD <- w * A
 		vcast <- apply(wD, 2, sum)
 		names(vcast) <- cnames
-		quota <- sum(vcast)/(mcan + 1) + eps
+		if(!constant.quota || count == 1)
+		    quota <- sum(vcast)/(mcan + 1) + eps
 		result.quota <- c(result.quota, quota)
 		result.pref <- rbind(result.pref, vcast)
 		result.elect <- rbind(result.elect, rep(0,nc))
@@ -108,12 +109,15 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		    rownames(df) <- count
 		    print(df)
 		}
-		#
+		
 		# if leading candidate exceeds quota, declare elected and adjust weights
 		# mark candidate for elimination in subsequent counting
 		#
+		# if the number of remaining candidates is smaller equal the number of seats, 
+		# then select the one with the largest vcast, no matter if quota is exceeded
+		#
 		vmax <- max(vcast)
-		if(vmax >= quota) {
+		if(vmax >= quota || sum(vcast > 0) <= mcan) {
 			ic <- (1:nc)[vcast == vmax]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
@@ -128,7 +132,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			    tie <- TRUE
 			}
 			index <- (x[, ic] == 1)
-			surplus <- (vmax - quota)/vmax
+			surplus <- if(sum(vcast > 0) > mcan) (vmax - quota)/vmax else 0
 			# The two ways of computing weights should be equivalent, but the first way could be faster.
 			w[index] <- if(!equal.ranking) w[index] * surplus
 			                else rowSums(wD[index, ]) - wD[index, ic] + wD[index, ic] * surplus
@@ -201,7 +205,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	               elect.elim=result.elect, equal.pref.allowed = equal.ranking, data=orig.x, 
 	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
 	               class="vote.stv")
-	if(!quiet) print(summary(result))
+	if(!quiet) print(summary(result, digits = digits))
 	invisible(result)
 }
 
