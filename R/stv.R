@@ -1,6 +1,7 @@
 stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
-                verbose = FALSE, seed = 1234, quiet = FALSE, digits = 3, ...) {
+                complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
+                quiet = FALSE, digits = 3, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -209,7 +210,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	               elect.elim=result.elect, equal.pref.allowed = equal.ranking, data=orig.x, 
 	               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
 	               class="vote.stv")
-	if(!quiet) print(summary(result, digits = digits))
+	if(!quiet) print(summary(result, complete.ranking = complete.ranking, digits = digits))
 	invisible(result)
 }
 

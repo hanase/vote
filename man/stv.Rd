@@ -20,7 +20,8 @@ Count votes using the single transferable voting method, also known as ranked ch
 \usage{
 stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
-  verbose = FALSE, seed = 1234, quiet = FALSE, digits = 3, \dots)
+  complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
+  quiet = FALSE, digits = 3, \dots)
 
 \method{summary}{vote.stv}(object, \dots, complete.ranking = FALSE, digits = 3)
 
