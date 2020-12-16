@@ -22,7 +22,7 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
   verbose = FALSE, seed = 1234, quiet = FALSE, digits = 3, \dots)
 
-\method{summary}{vote.stv}(object, \dots, digits = 3)
+\method{summary}{vote.stv}(object, \dots, complete.ranking = FALSE, digits = 3)
 
 \method{view}{vote.stv}(object, \dots)
 
@@ -48,6 +48,7 @@ correct.ranking(votes, quiet = FALSE)
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}
   \item{object, x}{Object of class \code{vote.stv}.}
+  \item{complete.ranking}{Logical. If \code{TRUE} a complete ranking is generated conditioned on the number of seats \code{mcan}.}
   \item{digits}{How many significant digits to be used in the output table.}
   \item{xlab, ylab}{Labels of the x- and y-axis.}
   \item{point.size}{Size of the points in the plot.}
@@ -69,7 +70,7 @@ By default, ties in the STV algorithm are resolved using the forwards tie-breaki
 
 The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown either as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}).
 
-Function \code{complete.ranking} produces a complete ranking of the candidates, conditioned on the number of seats selected in the \code{mcan} argument.
+Method \code{complete.ranking} produces a complete ranking of the candidates, conditioned on the number of seats selected in the \code{mcan} argument. It is called from the \code{summary} function if the \code{complete.ranking} argument is set to \code{TRUE}.
 
 }
 
@@ -122,7 +123,7 @@ s <- summary(stv.ims)
 write.csv(s, "myfile.csv")}
 
 # produce complete ranking
-complete.ranking(stv.ims)
+summary(stv.ims, complete.ranking = TRUE)
 
 \dontrun{
 # Example of Dublin West 2002 elections

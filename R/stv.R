@@ -274,7 +274,7 @@ backwards.tiebreak <- function(prefs, ic, elim = TRUE) {
     return(list(selected, sampled))
 }
 
-summary.vote.stv <- function(object, ..., digits = 3) {
+summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) {
     decimalplaces <- function(x) {
         ifelse(abs(x - round(x)) > .Machine$double.eps^0.5,
                nchar(sub('^\\d+\\.', '', sub('0+$', '', as.character(x)))),
@@ -328,6 +328,8 @@ summary.vote.stv <- function(object, ..., digits = 3) {
   attr(df, "number.of.candidates") <- ncol(object$preferences)
   attr(df, "number.of.seats") <- length(object$elected)
   attr(df, "equal.pref.allowed") <- object$equal.pref.allowed
+  if(complete.ranking) 
+      attr(df, "complete.ranking")  <- complete.ranking(object)
   return(df)
 }
 
@@ -338,6 +340,11 @@ print.summary.vote.stv <- function(x, ...) {
   if(attr(x, "equal.pref.allowed")) cat("=======================")
   election.info(x)
   print(kable(x, align='r', ...))
+  if(!is.null(attr(x, "complete.ranking"))) {
+      cat("\nComplete Ranking")
+      cat("\n================")
+      print(kable(attr(x, "complete.ranking"), align = c("r", "l", "c")))
+  }
   cat("\nElected:", paste(x['Elected', x['Elected',] != ""], collapse=", "), "\n\n")
 }
 
@@ -419,12 +426,13 @@ plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 
 
 "complete.ranking" <- function(object, ...) UseMethod("complete.ranking")
 complete.ranking.vote.stv <- function(object, ...){
-    result <- data.frame(Rank = 1:length(object$elected), Candidate = object$elected)
+    result <- data.frame(Rank = 1:length(object$elected), Candidate = object$elected, Elected = "x")
     cand.in.play <- colSums(abs(object$elect.elim)) == 0
     if(any(cand.in.play)){ # for neither elected not eliminated candidates look at the position in the last round
         rnk <- rank(- object$preferences[nrow(object$preferences), cand.in.play], ties.method = "random")
         result <- rbind(result, data.frame(Rank = seq(max(result$Rank) + 1, length = length(rnk)),
-                                           Candidate = colnames(object$preferences)[cand.in.play][order(rnk)]))
+                                           Candidate = colnames(object$preferences)[cand.in.play][order(rnk)],
+                                           Elected = ""))
     }
     if(any(object$elect.elim < 0)) { # eliminated candidates
         elims <- c()
@@ -432,7 +440,7 @@ complete.ranking.vote.stv <- function(object, ...){
             elims <- c(elims, colnames(object$elect.elim)[object$elect.elim[i,] < 0])
         }
         result <- rbind(result, data.frame(Rank = seq(max(result$Rank) + 1, length = length(elims)),
-                                           Candidate = elims))
+                                           Candidate = elims, Elected = ""))
     }
     return(result)
 }
