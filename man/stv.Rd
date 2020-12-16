@@ -28,6 +28,8 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 \method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, \dots)
 
+\method{complete.ranking}{vote.stv}(object, \dots)
+
 correct.ranking(votes, quiet = FALSE)
 }
 
@@ -63,7 +65,10 @@ The \code{correct.ranking} function does the above correction for all records, r
 
 By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O'Neill (2004).
 
-The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown either as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}). 
+The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown either as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}).
+
+Function \code{complete.ranking} produces a complete ranking of the candidates, conditioned on the number of seats selected in the \code{mcan} argument.
+
 }
 
 \value{
@@ -113,6 +118,9 @@ image(stv.ims)
 # write election results into a csv file
 s <- summary(stv.ims)
 write.csv(s, "myfile.csv")}
+
+# produce complete ranking
+complete.ranking(stv.ims)
 
 \dontrun{
 # Example of Dublin West 2002 elections

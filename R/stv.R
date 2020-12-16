@@ -117,7 +117,11 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		# then select the one with the largest vcast, no matter if quota is exceeded
 		#
 		vmax <- max(vcast)
-		if(vmax >= quota || sum(vcast > 0) <= mcan) {
+		
+		force.winner <- FALSE
+		if(constant.quota && sum(colSums(abs(result.elect)) == 0) <= mcan) 
+		    force.winner <- TRUE # with constant.quota=TRUE, elected candidates do not need to reach quota
+		if(vmax >= quota || force.winner) {
 			ic <- (1:nc)[vcast == vmax]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
@@ -132,7 +136,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			    tie <- TRUE
 			}
 			index <- (x[, ic] == 1)
-			surplus <- if(sum(vcast > 0) > mcan) (vmax - quota)/vmax else 0
+			surplus <- if(vmax > quota) (vmax - quota)/vmax else 0
 			# The two ways of computing weights should be equivalent, but the first way could be faster.
 			w[index] <- if(!equal.ranking) w[index] * surplus
 			                else rowSums(wD[index, ]) - wD[index, ic] + wD[index, ic] * surplus
@@ -411,5 +415,25 @@ plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 
     g <- g + ggplot2::geom_point(data = dfe, ggplot2::aes(shape = selection), size = point.size) + ggplot2::ylim(range(0, max(dfl$value, dfq$value)))
     g <- g + ggplot2::annotate(geom="text", x=as.factor(1), y=dfq[Count == 1, value], label="Quota", hjust = "right")
     g
+}
+
+"complete.ranking" <- function(object, ...) UseMethod("complete.ranking")
+complete.ranking.vote.stv <- function(object, ...){
+    result <- data.frame(Rank = 1:length(object$elected), Candidate = object$elected)
+    cand.in.play <- colSums(abs(object$elect.elim)) == 0
+    if(any(cand.in.play)){ # for neither elected not eliminated candidates look at the position in the last round
+        rnk <- rank(- object$preferences[nrow(object$preferences), cand.in.play], ties.method = "random")
+        result <- rbind(result, data.frame(Rank = seq(max(result$Rank) + 1, length = length(rnk)),
+                                           Candidate = colnames(object$preferences)[cand.in.play][order(rnk)]))
+    }
+    if(any(object$elect.elim < 0)) { # eliminated candidates
+        elims <- c()
+        for(i in rev(which(apply(object$elect.elim, 1, function(x) any(x < 0))))) { # iterate over counts backwards
+            elims <- c(elims, colnames(object$elect.elim)[object$elect.elim[i,] < 0])
+        }
+        result <- rbind(result, data.frame(Rank = seq(max(result$Rank) + 1, length = length(elims)),
+                                           Candidate = elims))
+    }
+    return(result)
 }
 
