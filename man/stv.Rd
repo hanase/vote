@@ -8,6 +8,8 @@
 \alias{image.vote.stv}
 \alias{plot.vote.stv}
 \alias{correct.ranking}
+\alias{complete.ranking}
+\alias{complete.ranking.vote.stv}
 
 \title{
 Single Transferable Vote
