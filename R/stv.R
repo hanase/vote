@@ -88,7 +88,6 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	if(verbose && !quiet) cat("\nList of 1st preferences in STV counts: \n")
 	
 	count <- 0
-	first.vcast <- NULL
 	while(mcan > 0) {
 		#
 		# calculate quota and total first preference votes
@@ -118,9 +117,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		# then select the one with the largest vcast, no matter if quota is exceeded
 		#
 		vmax <- max(vcast)
-		
+		D <- colSums(abs(result.elect)) == 0 # set of hopeful candidates
 		force.winner <- FALSE
-		if(constant.quota && sum(colSums(abs(result.elect)) == 0) <= mcan) 
+		if(constant.quota && sum(D) <= mcan) 
 		    force.winner <- TRUE # with constant.quota=TRUE, elected candidates do not need to reach quota
 		if(vmax >= quota || force.winner) {
 			ic <- (1:nc)[vcast == vmax]
@@ -155,22 +154,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
             #
-		    if(is.null(first.vcast)) { # first time elimination happens
-		        # keep initial count of first preferences after redistributing
-                first.vcast <- apply(w * (x == 1), 2, sum)
-                names(first.vcast) <- cnames
-                first.vcast[colSums(result.elect) > 0] <- 1 # don't allow zeros for already elected candidates
-            }
-		    # if there are candidates with zero first votes, eliminate those first
-		    zero.eliminated <- FALSE
-		    if(any(first.vcast == 0)) { 
-		        vmin <- min(first.vcast)
-		        ic <- (1:nc)[first.vcast == vmin]
-		        zero.eliminated <- TRUE
-		    } else {
-			    vmin <- min(vcast[vcast > 0])
-			    ic <- (1:nc)[vcast == vmin]
-		    }
+			vmin <- min(vcast[D])
+			ic <- (1:nc)[vcast == vmin & D]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
 			    if(tie.method == "f")
@@ -186,14 +171,12 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			result.elect[count,ic] <- -1
 			if(verbose && !quiet) {
 			    cat("Candidate", cnames[ic], "eliminated ")
-			    if(zero.eliminated) cat("due to zero first preferences ")
 			    if(tie) {
 			        cat("using", tie.method.name[tie.method], "tie-breaking method ")
 			        if(sampled[ic]) cat("(sampled)")
 			    }
 			    cat("\n")
 			}
-			if(zero.eliminated)	first.vcast[ic] <- 1
 		}
 		# redistribute votes
 		for(i in (1:nvotes)) {
