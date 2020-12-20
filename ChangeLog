@@ -1,8 +1,10 @@
-2.0-3 (12/16/2020)
+2.0-3 (12/19/2020)
 -----
 Added method complete.ranking for stv.
 
 Minor bug fix in stv introduced in 2.0-2.
+
+Removed first zero preferences in stv.
 
 2.0-2 (12/11/2020)
 -----
