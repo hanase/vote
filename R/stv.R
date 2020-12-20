@@ -95,8 +95,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	    count <- count + 1
 	    A <- (x == 1)/rowSums(x == 1) # splits 1st votes if there are more than one first ranking per vote
 	    A[is.na(A)] <- 0
-        wD <- w * A
-		vcast <- apply(wD, 2, sum)
+        uij <- w * A
+		vcast <- apply(uij, 2, sum)
 		names(vcast) <- cnames
 		if(!constant.quota || count == 1)
 		    quota <- sum(vcast)/(mcan + 1) + eps
@@ -118,10 +118,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		#
 		vmax <- max(vcast)
 		D <- colSums(abs(result.elect)) == 0 # set of hopeful candidates
-		force.winner <- FALSE
-		if(constant.quota && sum(D) <= mcan) 
-		    force.winner <- TRUE # with constant.quota=TRUE, elected candidates do not need to reach quota
-		if(vmax >= quota || force.winner) {
+		if(vmax >= quota || (constant.quota && sum(D) <= mcan)) { # with constant.quota elected candidates may not need to reach quota
 			ic <- (1:nc)[vcast == vmax]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
@@ -135,11 +132,11 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			    ic <- ic[iic]
 			    tie <- TRUE
 			}
-			index <- (x[, ic] == 1)
 			surplus <- if(vmax > quota) (vmax - quota)/vmax else 0
-			# The two ways of computing weights should be equivalent, but the first way could be faster.
-			w[index] <- if(!equal.ranking) w[index] * surplus
-			                else rowSums(wD[index, ]) - wD[index, ic] + wD[index, ic] * surplus
+			index <- (x[, ic] == 1) # ballots where ic has the first preference
+			w[index] <- uij[index, ic] * surplus # update weights
+			if(equal.ranking) w[index] <- w[index]  + rowSums(uij[index, ]) - uij[index, ic]
+			# reduce number of seats available
 			mcan <- mcan - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
@@ -153,7 +150,6 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			}
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
-            #
 			vmin <- min(vcast[D])
 			ic <- (1:nc)[vcast == vmin & D]
 			tie <- FALSE
@@ -178,15 +174,13 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			    cat("\n")
 			}
 		}
-		# redistribute votes
-		for(i in (1:nvotes)) {
-			jp <- x[i, ic]
-			if(jp > 0) {
-				index <- (x[i, ] > jp)
-				x[i, index] <- x[i, index] - 1
-				x[i, ic] <- 0
-			} 
+		# shift votes for voters who voted for ic
+		jp <- x[, ic]
+		for(i in which(jp > 0)) {
+			index <- x[i, ] > jp[i]
+			x[i, index] <- x[i, index] - 1
 		}
+		x[, ic] <- 0
 	}
 	rownames(result.pref) <- 1:count
 	result <- structure(list(elected = elected, preferences=result.pref, quotas=result.quota,
