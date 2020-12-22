@@ -63,19 +63,20 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
     x <-  check.votes(votes, "stv", equal.ranking = equal.ranking, quiet = quiet)
 	
 	nvotes <- nrow(x)
+	if(is.null(nvotes)) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)
 	
 	# Create elimination ranking using forwards tie-breaking
 	tie.method <- match.arg(ties)
 	tie.method.name <- c(f = "forwards", b = "backwards")
 	
-	if(tie.method == "f") {
-	    ftb <- ranking.forwards.tiebreak(x, nc, seed)
-	    tie.elim.rank <- ftb[[1]]
-	    sampled <- ftb[[2]]
-	} else {
-	    if(!is.null(seed)) set.seed(seed)
-	}
+	#if(tie.method == "f") {
+	otb <- ordered.tiebreak(x, nc, seed) 
+	#tie.elim.rank <- ftb[[1]]
+	#    sampled <- ftb[[2]]
+	#} else {
+	#    if(!is.null(seed)) set.seed(seed)
+	#}
 	
 	# initialize results
 	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
@@ -122,14 +123,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			ic <- (1:nc)[vcast == vmax]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
-			    if(tie.method == "f") 
-			        iic <- which.max(tie.elim.rank[ic])
-			    else {
-			        iica <- backwards.tiebreak(result.pref, ic, elim = FALSE)
-			        iic <- iica[[1]]
-			        sampled <- iica[[2]]
-			    }
-			    ic <- ic[iic]
+			    ic <- solve.tiebreak(tie.method, result.pref, ic, otb, elim = FALSE)
+			    sampled.tie <- attr(ic, "sampled")
+			    ordered.tie <- attr(ic, "ordered")
 			    tie <- TRUE
 			}
 			surplus <- if(vmax > quota) (vmax - quota)/vmax else 0
@@ -143,8 +139,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			if(verbose && !quiet) {
 			    cat("Candidate", cnames[ic], "elected ")
 			    if(tie) {
-			        cat("using", tie.method.name[tie.method], "tie-breaking method ")
-			        if(sampled[ic]) cat("(sampled)")
+			        cat("using", tie.method.name[tie.method])
+			        if(ordered.tie) cat(" & ordered")
+			        cat(" tie-breaking method ")
+			        if(sampled.tie) cat("(sampled)")
 			    }
 			    cat("\n")
 			}
@@ -154,22 +152,19 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			ic <- (1:nc)[vcast == vmin & D]
 			tie <- FALSE
 			if(length(ic) > 1) {# tie
-			    if(tie.method == "f")
-			        iic <- which.min(tie.elim.rank[ic])
-			    else { # backwards
-			        iica <- backwards.tiebreak(result.pref, ic)
-			        iic <- iica[[1]]
-			        sampled <- iica[[2]]
-			    }
-			    ic <- ic[iic]
+			    ic <- solve.tiebreak(tie.method, result.pref, ic, otb, elim = TRUE)
+			    sampled.tie <- attr(ic, "sampled")
+			    ordered.tie <- attr(ic, "ordered")
 			    tie <- TRUE
 			}
 			result.elect[count,ic] <- -1
 			if(verbose && !quiet) {
 			    cat("Candidate", cnames[ic], "eliminated ")
 			    if(tie) {
-			        cat("using", tie.method.name[tie.method], "tie-breaking method ")
-			        if(sampled[ic]) cat("(sampled)")
+			        cat("using", tie.method.name[tie.method])
+			        if(ordered.tie) cat(" & ordered")
+			        cat(" tie-breaking method ")
+			        if(sampled.tie) cat("(sampled)")
 			    }
 			    cat("\n")
 			}
@@ -191,8 +186,27 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	invisible(result)
 }
 
-ranking.forwards.tiebreak <- function(x, nc, seed = NULL) {
-    # Create elimination ranking using forwards tie-breaking
+solve.tiebreak <- function(method, prefs, icans, ordered.ranking = NULL, elim = TRUE){
+    if(method == "f") # forwards
+        ic <- forwards.tiebreak(prefs, icans, elim = elim)
+    else { # backwards
+        ic <- backwards.tiebreak(prefs, icans, elim = elim)
+    }
+    # solve remaining ties by ordered ranking
+    sampled <- FALSE
+    ordered <- FALSE
+    if(length(ic) > 1) {
+        ic <- ic[if(elim) which.min(ordered.ranking[ic]) else which.max(ordered.ranking[ic])]
+        sampled <- attr(ordered.ranking, "sampled")[ic]
+        ordered <- TRUE
+    }
+    attr(ic, "sampled") <- sampled
+    attr(ic, "ordered") <- ordered
+    return(ic)
+}
+
+ordered.tiebreak <- function(x, nc, seed = NULL) {
+    # Create elimination ranking using ordered tie-breaking
     # element ij in matrix nij is the number of j-th preferences
     # for candidate i
     nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
@@ -225,31 +239,41 @@ ranking.forwards.tiebreak <- function(x, nc, seed = NULL) {
             }
         }
     }
-    return(list(rnk, sampled))
+    attr(rnk, "sampled") <- sampled
+    return(rnk)
 }
 
-backwards.tiebreak <- function(prefs, ic, elim = TRUE) {
+forwards.tiebreak <- function(prefs, icans, elim = TRUE) {
     if(!elim) prefs <- -prefs
     if(is.null(dim(prefs))) dim(prefs) <- c(1, length(prefs))
-    sampled <- rep(FALSE, ncol(prefs))
+    rnk <- t(apply(prefs, 1, rank, ties.method="min"))
+    if(is.null(dim(rnk))) dim(rnk) <- c(1, length(rnk))
+    i <- 0
+    icv <- rep(FALSE, ncol(prefs))
+    icv[icans] <- TRUE
+    while(i < nrow(rnk) && length(icans) > 1){
+        i <- i + 1
+        ic.rnk <- rnk[i, icans]
+        icans <- which(icv & (rnk[i, ] == min(ic.rnk)))
+    }
+    return(icans)
+}
+
+
+backwards.tiebreak <- function(prefs, icans, elim = TRUE) {
+    if(!elim) prefs <- -prefs
+    if(is.null(dim(prefs))) dim(prefs) <- c(1, length(prefs))
     rnk <- t(apply(prefs, 1, rank, ties.method="min"))
     if(is.null(dim(rnk))) dim(rnk) <- c(1, length(rnk))
     i <- nrow(rnk)
-    ic.rnk <- rnk[i, ic]
-    ic.rnk.sort <- sort(ic.rnk)
     icv <- rep(FALSE, ncol(prefs))
-    icv[ic] <- TRUE
-    while(i > 1 && length(ic.rnk) > 1 && ic.rnk.sort[1] == ic.rnk.sort[2]){
-        ic <- which(icv & (rnk[i, ] == ic.rnk.sort[1]))
+    icv[icans] <- TRUE
+    while(i > 1 && length(icans) > 1){
         i <- i - 1
-        ic.rnk <- rnk[i, ic]
-        ic.rnk.sort <- sort(ic.rnk)
+        ic.rnk <- rnk[i, icans]
+        icans <- which(icv & (rnk[i, ] == min(ic.rnk)))
     }
-    if(i == 1 && length(ic.rnk) > 1 && ic.rnk.sort[1] == ic.rnk.sort[2]) { # need sampling
-        selected <- sample(1:length(ic), 1)
-        sampled[ic[selected]] <- TRUE
-    } else selected <- which.min(ic.rnk)
-    return(list(selected, sampled))
+    return(icans)
 }
 
 summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) {

@@ -1,10 +1,16 @@
-2.0-3 (12/19/2020)
+2.0-3.9000 (12/19/2020)
 -----
 Added method complete.ranking for stv.
 
 Minor bug fix in stv introduced in 2.0-2.
 
 Removed first zero preferences in stv.
+
+Condorcet loser is now not a weak loser (thanks to Salvatore Barbaro).
+
+Forwards tie-breaking method in STV renamed to "ordered".
+
+Forwards a backwards tie breaking methods complemented by the ordered method.
 
 2.0-2 (12/11/2020)
 -----
