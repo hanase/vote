@@ -34,10 +34,13 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
         while(!winner.exists) {
             most.wins <- nwins == max(nwins)
             if(sum(most.wins) < 2) # second most wins
-                most.wins <- most.wins | nwins == max(nwins[nwins < max(nwins)])
+                most.wins <- (most.wins | nwins == max(nwins[nwins < max(nwins)])) & !cdc.loser
             ro.part <- cand.names[most.wins]
             if(is.null(ro.part.first)) ro.part.first <- ro.part # keep the list of the original run-off participants
-            if(length(ro.part) == ncro) break # run-off must have less candidates than the original set
+            if(length(ro.part) == ncro || length(ro.part) <= 1) { # run-off must have less candidates than the original set
+                if(length(ro.part) == 1) runoff.winner <- ro.part # only one run-off participant
+                break 
+            }
             if(sum(most.wins) == 2) { # run-off between two candidates 
                 pair.run <- compare.two.candidates(x2[,which(most.wins)[1]], x2[,which(most.wins)[2]])
                 runoff.winner <- cand.names[which(most.wins)[which(pair.run == TRUE)]]
