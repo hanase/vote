@@ -24,7 +24,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     x2[x2 == 0] <- max(x2) + 1 # give not-ranked candidates the worst ranking
     points <- compute.wins(x2, nc, cnames)
     cdc.winner <- apply(points, 1, function(p) sum(p) == nc-1)
-    cdc.loser <- apply(points, 1, function(p) sum(p) == 0)
+    cdc.loser <- apply(points, 2, function(p) sum(p) == nc-1)
     runoff.winner <- ro.part <- ro.part.first <- NULL
     if(sum(cdc.winner) == 0 && runoff) { # run-off
         nwins <- rowSums(points)
