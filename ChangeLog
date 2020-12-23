@@ -12,6 +12,8 @@ Forwards tie-breaking method in STV renamed to "ordered".
 
 Forwards a backwards tie breaking methods complemented by the ordered method.
 
+Functions ordered.tiebreak and orderd.preferences added.
+
 2.0-2 (12/11/2020)
 -----
 Added backwards tie-breaking to stv.

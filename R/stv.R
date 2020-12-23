@@ -71,7 +71,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	tie.method.name <- c(f = "forwards", b = "backwards")
 	
 	#if(tie.method == "f") {
-	otb <- ordered.tiebreak(x, nc, seed) 
+	otb <- ordered.tiebreak(x, seed) 
 	#tie.elim.rank <- ftb[[1]]
 	#    sampled <- ftb[[2]]
 	#} else {
@@ -189,8 +189,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 translate.ties <- function(ties, method){
     ties.char <- ifelse(ties == 0, "", method)
-    ties.char <- ifelse(ties == 2, paste0(ties.char, "o"), ties.char)
-    ties.char <- ifelse(ties == 3, paste0(ties.char, "s"), ties.char)
+    ties.char <- ifelse(ties > 1, paste0(ties.char, "o"), ties.char)
+    ties.char <- ifelse(ties > 2, paste0(ties.char, "s"), ties.char)
     names(ties.char) <- 1:length(ties)
     return(ties.char)
 }
@@ -214,11 +214,15 @@ solve.tiebreak <- function(method, prefs, icans, ordered.ranking = NULL, elim = 
     return(ic)
 }
 
-ordered.tiebreak <- function(x, nc, seed = NULL) {
+ordered.preferences <- function(vmat) {
+    sapply(1:ncol(vmat), function(pref) apply(vmat, 2, function(f) sum(f == pref)))
+}
+
+ordered.tiebreak <- function(vmat, seed = NULL) {
     # Create elimination ranking using ordered tie-breaking
     # element ij in matrix nij is the number of j-th preferences
     # for candidate i
-    nij <- sapply(1:nc, function(pref) apply(x, 2, function(f) sum(f == pref)))
+    nij <- ordered.preferences(vmat)
     # ranking for each preference
     nij.ranking <- apply(nij, 2, rank, ties.method="min")
     rnk <- nij.ranking[,1]
@@ -227,7 +231,7 @@ ordered.tiebreak <- function(x, nc, seed = NULL) {
     # resolve ranking duplicates by moving to the next column
     if(any(dpl)) {
         if(!is.null(seed)) set.seed(seed)
-        for(pref in 1:nc) {
+        for(pref in 1:ncol(vmat)) {
             if(! pref %in% rnk[dpl]) next
             j <- 2
             rnk[rnk == pref] <- NA
@@ -378,7 +382,7 @@ image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion
     xd <- x$data
     nc <- ncol(xd)
     if(all.pref) {
-        nij <- sapply(1:nc, function(pref) apply(xd, 2, function(f) sum(f == pref)))[nc:1,]
+        nij <- ordered.preferences(xd)[nc:1,]
         image.plot(x = 1:nc, y = 1:nc, t(nij), axes = FALSE, xlab = "", ylab = "",
                    col = hcl.colors(12, "YlOrRd", rev = TRUE), ...)
         axis(3, at = 1:nc, labels = 1:nc)

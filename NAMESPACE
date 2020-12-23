@@ -18,7 +18,9 @@ export(
     valid.votes,
     correct.ranking,
     view,
-    complete.ranking
+    complete.ranking,
+    ordered.preferences,
+    ordered.tiebreak
 )
 
 # register S3 methods

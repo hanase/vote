@@ -10,6 +10,8 @@
 \alias{correct.ranking}
 \alias{complete.ranking}
 \alias{complete.ranking.vote.stv}
+\alias{ordered.preferences}
+\alias{ordered.tiebreak}
 
 \title{
 Single Transferable Vote
@@ -34,6 +36,10 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 \method{complete.ranking}{vote.stv}(object, \dots)
 
 correct.ranking(votes, quiet = FALSE)
+
+ordered.tiebreak(vmat, seed = NULL)
+
+ordered.preferences(vmat)
 }
 
 \arguments{
@@ -43,7 +49,7 @@ correct.ranking(votes, quiet = FALSE)
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
   \item{equal.ranking}{If \code{TRUE} equal preferences are allowed, see below.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
-  \item{ties}{Method used to break ties. By default the forwards tie-braking is used (\dQuote{f}). Value "b" invokes the backwards tie-breaking method, see O'Neill (2004).}
+  \item{ties}{Method used to break ties. By default the forwards tie-breaking is used (\dQuote{f}). Value \dQuote{b} invokes the backwards tie-breaking method, see O'Neill (2004).}
   \item{constant.quota}{Logical determining if the quota should be kept constant for all counts.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
@@ -57,6 +63,7 @@ correct.ranking(votes, quiet = FALSE)
   \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
   \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis, otherwise raw vote counts are shown. Only available when \code{all.pref} is \code{FALSE}.}
   \item{\dots}{Additional arguments passed to the underlying functions.}
+  \item{vmat}{Matrix of valid votes.}
 }
 \details{
 For a description of the single transferable vote system see \url{https://imstat.org/elections/single-transferable-voting-system/}.
@@ -67,7 +74,9 @@ By default the preferences are not allowed to contain duplicates per vote. Howev
 
 The \code{correct.ranking} function does the above correction for all records, regardless if they contain duplicates or not. It can either be used by calling it explicitely, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE}. The function is also called from within the \code{\link{condorcet}} function.
 
-By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O'Neill (2004).
+By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O'Neill (2004). In addition, both methods are complemented by the following \dQuote{ordered} method: Prior to the STV election candidates are ordered by the number of 1st preferences. Equal ranks are resolved by moving to the number of 2nd preferences, then 3rd and so on. Remaining ties are broken by random draws. Such complete ordering is used to break any tie that cannot be resolved by the forwards or backwards method. If there is at least one tie during the processing, the output contains a row indicating in which count a tie-break happened (see the \code{ties} element in the Value section for an explanation of the symbols).
+
+The ordered tiebreaking described above can be analysed from outside of the \code{stv} function by using the \code{ordered.tiebreak} function for viewing the a-priori ordering (the highest number is the best and lowest is the worst). Such ranking is produced by comparing candidates along the columns of the matrix returned by \code{ordered.preferences}.
 
 The \code{plot} function shows the evolution of the total score for each candidate as well as the quota. The \code{image} function visualizes the joint distribution of two preferences (if \code{all.pref=FALSE}) as well as the marginal distribution of all preferences (if \code{all.pref=TRUE}). The joint distribution can be shown either as proportions (if \code{proportion=TRUE}) or raw vote counts (if \code{proportion=FALSE}).
 
@@ -82,8 +91,19 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{quotas}{Vector of quotas, one for each count.}
 \item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
 \item{equal.pref.allowed}{Input argument \code{equal.ranking}.}
+\item{ties}{Character vector indicating if and what tie-break happened in each count. Possible values: \dQuote{} (no tie-break), \dQuote{f} (forward tie-breaking method only), \dQuote{fo} (forward method and ordered method), \dQuote{fos} (forward method and ordered method and sampling). If the backwards tie-breaking method is used, these values are \dQuote{b}, \dQuote{bo} and \dQuote{bos}.}
 \item{data}{Input data (possibly corrected) with invalid votes removed.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
+
+The \code{summary} function returns a data frame where columns are counts and transfers, and rows are the quota, the candidates, ties and the elected and eliminated candidates. Various attributes of the data frame contain more information about the results.
+
+The \code{correct.ranking} function returns a matrix of votes with corrected preferences.
+
+\code{complete.ranking} returns a data frame with a full ordering of the candidates.
+
+\code{ordered.preferences} returns a matrix with number of preferences for each candidate and preference. These are the same values as seen by \code{image(..., all.pref = TRUE)}.
+
+\code{ordered.tiebreak} returns the ranking for each candidate based on \code{ordered.preferences()}, with the highest number being the best and the lowest number being the worst. Its attribute \dQuote{sampled} indicates if there was random sampling involved in ranking each candidate. 
 }
 
 \references{
