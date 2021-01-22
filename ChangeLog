@@ -1,3 +1,27 @@
+2.1-0 (1/4/2021)
+-----
+Added method complete.ranking for stv.
+
+Minor bug fix in stv introduced in 2.0-2.
+
+Removed first zero preferences in stv.
+
+Condorcet loser is now not a weak loser (thanks to Salvatore Barbaro).
+
+Forwards tie-breaking method in STV renamed to "ordered".
+
+Forwards a backwards tie breaking methods complemented by the ordered method.
+
+Functions ordered.tiebreak and orderd.preferences added.
+
+2.0-2 (12/11/2020)
+-----
+Added backwards tie-breaking to stv.
+
+Added an option for constant quota in stv.
+
+Argument "digits" added to stv.
+
 2.0-0 (12/02/2020)
 -----
 Added condorcet function (thanks to Salvatore Barbaro).

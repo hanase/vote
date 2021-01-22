@@ -17,7 +17,10 @@ export(
     invalid.votes,
     valid.votes,
     correct.ranking,
-    view
+    view,
+    complete.ranking,
+    ordered.preferences,
+    ordered.tiebreak
 )
 
 # register S3 methods
@@ -43,3 +46,4 @@ S3method(summary, vote.tworound.runoff)
 S3method(view, vote.tworound.runoff)
 S3method(image, vote.tworound.runoff)
 S3method(print, summary.vote.tworound.runoff)
+S3method(complete.ranking, vote.stv)
