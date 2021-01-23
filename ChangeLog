@@ -1,3 +1,7 @@
+2.1-0.9000
+-----
+stv: Added feature of reserved seats (arguments group.mcan, group.members)
+
 2.1-0 (1/4/2021)
 -----
 Added method complete.ranking for stv.

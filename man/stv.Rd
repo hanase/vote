@@ -22,6 +22,7 @@ Count votes using the single transferable voting method, also known as ranked ch
 \usage{
 stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
+  group.mcan = NULL, group.members = NULL,
   complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
   quiet = FALSE, digits = 3, \dots)
 
@@ -51,6 +52,8 @@ ordered.preferences(vmat)
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
   \item{ties}{Method used to break ties. By default the forwards tie-breaking is used (\dQuote{f}). Value \dQuote{b} invokes the backwards tie-breaking method, see O'Neill (2004).}
   \item{constant.quota}{Logical determining if the quota should be kept constant for all counts.}
+  \item{group.mcan}{Minimum number of candidates to be elected who are members of a given group. I.e., number of reserved seats for a subset of candidates defined by the \code{group.members} argument.}
+  \item{group.members}{Vector of candidate names or indices who are egligible for reserved seats given by \code{group.mcan}. If it is a vector of indices, the order of candidates is assumed to correspond to the columns of \code{votes}.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}
@@ -165,6 +168,12 @@ votes <- data.frame(C1=c(3,2,1,3), C2=c(1,1,2,0),
 stv(votes, mcan = 2, equal.ranking = TRUE)
 # vote #3 was corrected by stv which used this data:
 correct.ranking(votes, quiet = TRUE)
+
+# Example of using reserved seats: 
+# e.g. reserve two seats for students
+stv(ims_election, mcan = 5, group.mcan = 2, 
+    group.members = c("Declan", "Claire", "Oscar") # students
+    )
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")
