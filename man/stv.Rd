@@ -53,7 +53,7 @@ ordered.preferences(vmat)
   \item{ties}{Method used to break ties. By default the forwards tie-breaking is used (\dQuote{f}). Value \dQuote{b} invokes the backwards tie-breaking method, see O'Neill (2004).}
   \item{constant.quota}{Logical determining if the quota should be kept constant for all counts.}
   \item{group.mcan}{Minimum number of candidates to be elected who are members of a given group. I.e., number of reserved seats for a subset of candidates defined by the \code{group.members} argument.}
-  \item{group.members}{Vector of candidate names or indices who are egligible for reserved seats given by \code{group.mcan}. If it is a vector of indices, the order of candidates is assumed to correspond to the columns of \code{votes}.}
+  \item{group.members}{Vector of candidate names or indices who are eligible for reserved seats given by \code{group.mcan}. If it is a vector of indices, the order of candidates is assumed to correspond to the columns of \code{votes}.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
   \item{quiet}{If \code{TRUE} no output is printed.}

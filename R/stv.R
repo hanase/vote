@@ -104,7 +104,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	if(use.marking) {
 	    if(verbose && !quiet) {
 	        cat("Number of reserved seats is", group.mcan, "\n")
-	        cat("Egligible for reserved seats:",  paste(cnames[group.members], collapse = ", "), "\n")
+	        cat("Eligible for reserved seats:",  paste(cnames[group.members], collapse = ", "), "\n")
 	    }
 	    group.mcan.orig <- group.mcan
 	}
@@ -394,7 +394,7 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   attr(df, "number.of.seats") <- length(object$elected)
   if(!is.null(object$reserved.seats)) {
       attr(df, "reserved.seats") <- object$reserved.seats
-      attr(df, "reservation.egligible") <- object$group.members
+      attr(df, "reservation.eligible") <- object$group.members
   }
   attr(df, "equal.pref.allowed") <- object$equal.pref.allowed
   if(complete.ranking) 
@@ -410,7 +410,7 @@ print.summary.vote.stv <- function(x, ...) {
   election.info(x)
   if(!is.null(attr(x, "reserved.seats"))){
       cat("Number of reserved seats:\t", attr(x, "reserved.seats"), "\n")
-      cat("Egligible for reserved seats:\t", length(attr(x, "reservation.egligible")), "\n")
+      cat("Eligible for reserved seats:\t", length(attr(x, "reservation.eligible")), "\n")
   }
   print(kable(x, align='r', ...))
   if(!is.null(attr(x, "complete.ranking"))) {
