@@ -97,6 +97,8 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{ties}{Character vector indicating if and what tie-break happened in each count. Possible values: \dQuote{} (no tie-break), \dQuote{f} (forward tie-breaking method only), \dQuote{fo} (forward method and ordered method), \dQuote{fos} (forward method and ordered method and sampling). If the backwards tie-breaking method is used, these values are \dQuote{b}, \dQuote{bo} and \dQuote{bos}.}
 \item{data}{Input data (possibly corrected) with invalid votes removed.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
+\item{reserved.seats}{Number of reserved seats (\code{group.mcan}), or \code{NULL} if none.}
+\item{group.members}{Vector of candidates eligible for reserved seats, or \code{NULL} if none.}
 
 The \code{summary} function returns a data frame where columns are counts and transfers, and rows are the quota, the candidates, ties and the elected and eliminated candidates. Various attributes of the data frame contain more information about the results.
 
@@ -172,8 +174,7 @@ correct.ranking(votes, quiet = TRUE)
 # Example of using reserved seats: 
 # e.g. reserve two seats for students
 stv(ims_election, mcan = 5, group.mcan = 2, 
-    group.members = c("Declan", "Claire", "Oscar") # students
-    )
+    group.members = c("Declan", "Claire", "Oscar")) # students
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")

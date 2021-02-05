@@ -71,8 +71,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	    group.members <- unique(group.members[group.members <= nc & group.members > 0])
 	    use.marking <- TRUE
 	} else{
-	    group.mcan <- mcan
-	    group.members <- 1:nc
+	    group.mcan <- 0
+	    group.members <- c()
 	}
 	
 	elected <- NULL
@@ -152,12 +152,14 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		vmax <- max(vcast)
 		ic <- (1:nc)[vcast == vmax]
 		D <- colSums(abs(result.elect)) == 0 # set of hopeful candidates
-		Dm <- D
-		Dm[-group.members] <- FALSE # set of hopeful marked candidates
+		if(use.marking){
+		    Dm <- D
+		    Dm[-group.members] <- FALSE # set of hopeful marked candidates
+		}
 		if((vmax >= quota && !(! ic %in% group.members && mcan == group.mcan) || 
 		     (constant.quota && sum(D) <= mcan)) || # with constant.quota elected candidates may not need to reach quota
 		     (use.marking && any(ic %in% group.members) && (sum(Dm) <= group.mcan || sum(D) - sum(Dm) == 0))) { 
-		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.mcan) # if a tiebreak choose marked candidates if needed
+		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.mcan) # if a tiebreak, choose marked candidates if needed
 		        ic <- ic[ic %in% group.members]
 			if(length(ic) > 1) {# tie
 			    ic <- solve.tiebreak(tie.method, result.pref, ic, otb, elim = FALSE)
@@ -171,7 +173,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			if(equal.ranking) w[index] <- w[index]  + rowSums(uij[index, ]) - uij[index, ic]
 			# reduce number of seats available
 			mcan <- mcan - 1
-			if(ic %in% group.members)
+			if(use.marking && ic %in% group.members)
 			    group.mcan <- group.mcan - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
@@ -188,7 +190,6 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
 		    elim.select <- D
-		    #if(count == 5) stop("")
 		    if(use.marking && (mcan == group.mcan || sum(Dm) <= group.mcan)) elim.select <- elim.select & !Dm
 			vmin <- min(vcast[elim.select])
 			ic <- (1:nc)[vcast == vmin & elim.select]
@@ -223,9 +224,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	result <- structure(list(elected = elected, preferences = result.pref, quotas = result.quota,
 	               elect.elim = result.elect, equal.pref.allowed = equal.ranking, 
 	               ties = translate.ties(result.ties, tie.method), data = orig.x, 
+	               invalid.votes = votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE],
 	               reserved.seats = if(use.marking) group.mcan.orig else NULL,
-	               group.members = if(use.marking) group.members else NULL,
-	               invalid.votes = votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
+	               group.members = if(use.marking) group.members else NULL),
 	               class = "vote.stv")
 	if(!quiet) print(summary(result, complete.ranking = complete.ranking, digits = digits))
 	invisible(result)

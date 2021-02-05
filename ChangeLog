@@ -1,6 +1,6 @@
-2.1-0.9000
+2.2-0 (2/2/2021)
 -----
-stv: Added feature of reserved seats (arguments group.mcan, group.members)
+stv: Added feature of reserving seats for a subgroup (arguments group.mcan, group.members)
 
 2.1-0 (1/4/2021)
 -----
