@@ -38,6 +38,8 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 correct.ranking(votes, quiet = FALSE)
 
+remove.candidate(votes, can)
+
 ordered.tiebreak(vmat, seed = NULL)
 
 ordered.preferences(vmat)
@@ -66,6 +68,7 @@ ordered.preferences(vmat)
   \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
   \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis, otherwise raw vote counts are shown. Only available when \code{all.pref} is \code{FALSE}.}
   \item{\dots}{Additional arguments passed to the underlying functions.}
+  \item{can}{Vector of candiate name(s) or indices to be removed from the set of votes.}
   \item{vmat}{Matrix of valid votes.}
 }
 \details{
@@ -75,7 +78,7 @@ The input data \code{votes} is structured as follows: Row \eqn{i} contains the p
 
 By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,\dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected and a warning is issued by calling the \code{correct.ranking} function. 
 
-The \code{correct.ranking} function does the above correction for all records, regardless if they contain duplicates or not. It can either be used by calling it explicitely, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE}. The function is also called from within the \code{\link{condorcet}} function.
+The \code{correct.ranking} function does the above correction for all records, regardless if they contain duplicates or not. It can either be used by calling it explicitely, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE}. The function is also called from within the \code{\link{condorcet}} function. The \code{remove.candidate} function removes the given candidate(s) and adjusts the ranked votes accordingly by calling the \code{correct.ranking} function.
 
 By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O'Neill (2004). In addition, both methods are complemented by the following \dQuote{ordered} method: Prior to the STV election candidates are ordered by the number of 1st preferences. Equal ranks are resolved by moving to the number of 2nd preferences, then 3rd and so on. Remaining ties are broken by random draws. Such complete ordering is used to break any tie that cannot be resolved by the forwards or backwards method. If there is at least one tie during the processing, the output contains a row indicating in which count a tie-break happened (see the \code{ties} element in the Value section for an explanation of the symbols).
 
@@ -103,6 +106,8 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 The \code{summary} function returns a data frame where columns are counts and transfers, and rows are the quota, the candidates, ties and the elected and eliminated candidates. Various attributes of the data frame contain more information about the results.
 
 The \code{correct.ranking} function returns a matrix of votes with corrected preferences.
+
+\code{remove.candidate} returns a matrix of votes with the given candidates removed and preferences corrected.
 
 \code{complete.ranking} returns a data frame with a full ordering of the candidates.
 
@@ -175,6 +180,9 @@ correct.ranking(votes, quiet = TRUE)
 # e.g. reserve two seats for students
 stv(ims_election, mcan = 5, group.mcan = 2, 
     group.members = c("Declan", "Claire", "Oscar")) # students
+    
+# Example of removing candidates from original votes
+stv(remove.candidate(ims_election, c("Jasper", "Tilmann")), mcan = 5)
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")
