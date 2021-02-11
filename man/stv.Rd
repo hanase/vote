@@ -12,12 +12,13 @@
 \alias{complete.ranking.vote.stv}
 \alias{ordered.preferences}
 \alias{ordered.tiebreak}
+\alias{remove.candidate}
 
 \title{
 Single Transferable Vote
 }
 \description{
-Count votes using the single transferable voting method, also known as ranked choice voting or instant runoff.
+Count votes using the single transferable voting method, also known as ranked choice voting or instant runoff. Raftery et al. (2021) describes the functionality in great detail.
 }
 \usage{
 stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
@@ -38,7 +39,7 @@ stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 correct.ranking(votes, quiet = FALSE)
 
-remove.candidate(votes, can)
+remove.candidate(votes, can, quiet = TRUE)
 
 ordered.tiebreak(vmat, seed = NULL)
 
@@ -117,6 +118,8 @@ The \code{correct.ranking} function returns a matrix of votes with corrected pre
 }
 
 \references{
+Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. arXiv:2102NNN
+%\href{}{ArXiv version}
 
 R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
 
