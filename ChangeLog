@@ -1,3 +1,12 @@
+2.2-0 (2/11/2021)
+-----
+stv: Added feature of reserving seats for a subgroup (arguments group.mcan, group.members)
+
+Added function remove.candidate() for removing candidates from the set of votes and 
+adjusting the preferences accordingly.
+
+Link to the arXiv paper added.
+
 2.1-0 (1/4/2021)
 -----
 Added method complete.ranking for stv.

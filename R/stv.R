@@ -1,5 +1,6 @@
 stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
+                group.mcan = NULL, group.members = NULL,
                 complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
 	###################################
@@ -44,7 +45,36 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	nc <- ncol(votes)
 	cnames <- colnames(votes)
 	
-	mcan <- check.nseats(mcan, nc, default=floor(nc/2))	
+	mcan <- check.nseats(mcan, nc, default=floor(nc/2))
+	
+	# check groups (if used)
+	use.marking <- FALSE
+	if(!is.null(group.mcan)) { # number of candidates to be elected from a group 
+	    if(is.null(group.members)) stop("If group.mcan is given, argument group.members must be used to mark members of the group.")
+	    if(group.mcan > mcan) {
+	        warning("group.mcan must be <= mcan. Adjusting group.mcan to ", mcan, ".")
+	        group.mcan <- mcan
+	    }
+	    if(length(group.members) < group.mcan) {
+	        warning("There are less group members than group.mcan. Adjusting group.mcan to ", length(group.members), ".")
+	        group.mcan <- length(group.members)
+	    }
+	    if(!is.numeric(group.members)) { # convert names to indices
+	        gind <- match(group.members, cnames)
+	        if(any(is.na(gind))) {
+	            warning("Group member(s) ", paste(group.members[is.na(gind)], collapse = ", "), " not found in the set of candidates, therefore removed from the group.")
+	            gind <- gind[!is.na(gind)]
+	        }
+	        group.members <- gind
+	    } 
+	    # now group memebers are given as indices
+	    group.members <- unique(group.members[group.members <= nc & group.members > 0])
+	    use.marking <- TRUE
+	} else{
+	    group.mcan <- 0
+	    group.members <- c()
+	}
+	
 	elected <- NULL
 	
 	#
@@ -66,17 +96,18 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	if(is.null(nvotes)) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)
 	
-	# Create elimination ranking using forwards tie-breaking
+	# Create elimination ranking
 	tie.method <- match.arg(ties)
 	tie.method.name <- c(f = "forwards", b = "backwards")
-	
-	#if(tie.method == "f") {
 	otb <- ordered.tiebreak(x, seed) 
-	#tie.elim.rank <- ftb[[1]]
-	#    sampled <- ftb[[2]]
-	#} else {
-	#    if(!is.null(seed)) set.seed(seed)
-	#}
+
+	if(use.marking) {
+	    if(verbose && !quiet) {
+	        cat("Number of reserved seats is", group.mcan, "\n")
+	        cat("Eligible for reserved seats:",  paste(cnames[group.members], collapse = ", "), "\n")
+	    }
+	    group.mcan.orig <- group.mcan
+	}
 	
 	# initialize results
 	result.pref <- result.elect <- matrix(NA, ncol=nc, nrow=0, 
@@ -119,9 +150,17 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		# then select the one with the largest vcast, no matter if quota is exceeded
 		#
 		vmax <- max(vcast)
+		ic <- (1:nc)[vcast == vmax]
 		D <- colSums(abs(result.elect)) == 0 # set of hopeful candidates
-		if(vmax >= quota || (constant.quota && sum(D) <= mcan)) { # with constant.quota elected candidates may not need to reach quota
-			ic <- (1:nc)[vcast == vmax]
+		if(use.marking){
+		    Dm <- D
+		    Dm[-group.members] <- FALSE # set of hopeful marked candidates
+		}
+		if((vmax >= quota && !(! ic %in% group.members && mcan == group.mcan) || 
+		     (constant.quota && sum(D) <= mcan)) || # with constant.quota elected candidates may not need to reach quota
+		     (use.marking && any(ic %in% group.members) && (sum(Dm) <= group.mcan || sum(D) - sum(Dm) == 0))) { 
+		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.mcan) # if a tiebreak, choose marked candidates if needed
+		        ic <- ic[ic %in% group.members]
 			if(length(ic) > 1) {# tie
 			    ic <- solve.tiebreak(tie.method, result.pref, ic, otb, elim = FALSE)
 			    tie <- 1
@@ -134,6 +173,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			if(equal.ranking) w[index] <- w[index]  + rowSums(uij[index, ]) - uij[index, ic]
 			# reduce number of seats available
 			mcan <- mcan - 1
+			if(use.marking && ic %in% group.members)
+			    group.mcan <- group.mcan - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
 			if(verbose && !quiet) {
@@ -148,8 +189,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			}
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
-			vmin <- min(vcast[D])
-			ic <- (1:nc)[vcast == vmin & D]
+		    elim.select <- D
+		    if(use.marking && (mcan == group.mcan || sum(Dm) <= group.mcan)) elim.select <- elim.select & !Dm
+			vmin <- min(vcast[elim.select])
+			ic <- (1:nc)[vcast == vmin & elim.select]
 			if(length(ic) > 1) {# tie
 			    ic <- solve.tiebreak(tie.method, result.pref, ic, otb, elim = TRUE)
 			    tie <- 1
@@ -181,7 +224,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	result <- structure(list(elected = elected, preferences = result.pref, quotas = result.quota,
 	               elect.elim = result.elect, equal.pref.allowed = equal.ranking, 
 	               ties = translate.ties(result.ties, tie.method), data = orig.x, 
-	               invalid.votes = votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE]), 
+	               invalid.votes = votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE],
+	               reserved.seats = if(use.marking) group.mcan.orig else NULL,
+	               group.members = if(use.marking) group.members else NULL),
 	               class = "vote.stv")
 	if(!quiet) print(summary(result, complete.ranking = complete.ranking, digits = digits))
 	invisible(result)
@@ -339,13 +384,19 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   if(any(object$ties != "")) 
       df["Tie-breaks", seq(1, ncol(df), by = 2)] <- object$ties
   else df <- df[-which(rownames(df) == "Tie-breaks"),]
-  
+  if(!is.null(object$reserved.seats))
+      rownames(df)[object$group.members + 1] <- paste0(rownames(df)[object$group.members + 1], "*")
+      
   df[is.na(df)] <- ""
   class(df) <- c('summary.vote.stv', class(df))
   attr(df, "number.of.votes") <- nrow(object$data)
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- ncol(object$preferences)
   attr(df, "number.of.seats") <- length(object$elected)
+  if(!is.null(object$reserved.seats)) {
+      attr(df, "reserved.seats") <- object$reserved.seats
+      attr(df, "reservation.eligible") <- object$group.members
+  }
   attr(df, "equal.pref.allowed") <- object$equal.pref.allowed
   if(complete.ranking) 
       attr(df, "complete.ranking")  <- complete.ranking(object)
@@ -358,6 +409,10 @@ print.summary.vote.stv <- function(x, ...) {
   cat("\n===================================")
   if(attr(x, "equal.pref.allowed")) cat("=======================")
   election.info(x)
+  if(!is.null(attr(x, "reserved.seats"))){
+      cat("Number of reserved seats:\t", attr(x, "reserved.seats"), "\n")
+      cat("Eligible for reserved seats:\t", length(attr(x, "reservation.eligible")), "\n")
+  }
   print(kable(x, align='r', ...))
   if(!is.null(attr(x, "complete.ranking"))) {
       cat("\nComplete Ranking")

@@ -20,7 +20,8 @@ export(
     view,
     complete.ranking,
     ordered.preferences,
-    ordered.tiebreak
+    ordered.tiebreak,
+    remove.candidate
 )
 
 # register S3 methods

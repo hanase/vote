@@ -77,3 +77,13 @@ correct.ranking <- function(votes, quiet = FALSE){
   rownames(v) <- rownames(votes)
   return(v)
 }
+
+remove.candidate <- function(votes, can, quiet = TRUE){
+  if(!all(can %in% colnames(votes)) || (is.numeric(can) && !all(can %in% 1:nrow(votes))))
+    stop("Value(s) of can not found in the set of candidates.")
+  if(is.numeric(can))
+    votes <- votes[,-can, drop = FALSE]
+  else
+    votes <- votes[,!colnames(votes) %in% can]
+  return(correct.ranking(votes, quiet = quiet))
+}

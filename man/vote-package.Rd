@@ -6,7 +6,7 @@
 Election Vote Counting
 }
 \description{
-Counting election votes and determining election results by different methods, including the single transferable vote (ranked choice), approval, score, plurality, condorcet and two-round runoff methods.
+Counting election votes and determining election results by different methods, including the single transferable vote (ranked choice), approval, score, plurality, condorcet and two-round runoff methods. Details about the methods and package functions can be found in Raftery et al. (2021).
 }
 \details{
 The main function of the package is called \code{\link{count.votes}}. If no specific method is passed, it decides on the basis of the available data which method is the most appropriate. Specific methods can also be invoked explicitly. 
@@ -30,6 +30,10 @@ Example datasets are included. The \code{\link{ims_election}} dataset contains a
 Hana Sevcikova, Bernard Silverman, Adrian Raftery
 
 Maintainer: Hana Sevcikova
+}
+
+\references{
+Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. \href{https://arxiv.org/abs/2102.05801}{arXiv:2102.05801}.
 }
 
 \examples{
