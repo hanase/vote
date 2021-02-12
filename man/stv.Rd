@@ -118,8 +118,7 @@ The \code{correct.ranking} function returns a matrix of votes with corrected pre
 }
 
 \references{
-Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. \href{http://arxiv.org/abs/2102.05801}{arXiv:2102.05801}.
-%\href{}{ArXiv version}
+Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. \href{https://arxiv.org/abs/2102.05801}{arXiv:2102.05801}.
 
 R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
 
