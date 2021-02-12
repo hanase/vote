@@ -2,12 +2,11 @@ Package: vote
 Type: Package
 Title: Election Vote Counting
 Version: 2.2-0
-Date: 2021-2-4
+Date: 2021-2-11
 Author: Hana Sevcikova, Bernard Silverman, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
 Description: Counting election votes and determining election results by different methods, including
-    the single transferable vote or ranked choice (Newland and F.S. Britton, 1997; 
-    ISBN: 0903291185), approval, score, plurality, condorcet and two-round runoff methods.
+    the single transferable vote or ranked choice, approval, score, plurality, condorcet and two-round runoff methods (Raftery et al., 2021 <arXiv:2102.05801>).
 Depends: R (>= 3.5.0)
 Imports: formattable, knitr, data.table, fields
 Suggests: ggplot2
