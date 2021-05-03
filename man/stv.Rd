@@ -52,7 +52,7 @@ ordered.preferences(vmat)
   \item{eps}{Value added to the quota. I.e. the STV quota is computed as \cr
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
   \item{quota.hare}{Changes quota calculation method from Droop (default) \code{FALSE} to Hare \code{TRUE}. STV Hare quota method is computed as \cr
-    \code{number_of_first_preferences/(number_of_seats) + eps}. True Hare formula would entail \code{eps = 0}.}
+    \code{number_of_first_preferences/(number_of_seats) + eps}. The actual Hare formula would entail \code{eps = 0}.}
   \item{equal.ranking}{If \code{TRUE} equal preferences are allowed, see below.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
   \item{ties}{Method used to break ties. By default the forwards tie-breaking is used (\dQuote{f}). Value \dQuote{b} invokes the backwards tie-breaking method, see O'Neill (2004).}
