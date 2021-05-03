@@ -132,7 +132,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		names(vcast) <- cnames
 		if(!constant.quota || count == 1)
 		# Droop and Hare test control. If true will run Hare or if false/default to Droop method
-		    if(!quota.hare == TRUE){
+		    if(!quota.hare == FALSE){
 		      quota <- sum(vcast)/(mcan) + eps} else {
 		      quota <- sum(vcast)/(mcan + 1) + eps}
 
