@@ -1,8 +1,8 @@
 stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
-                group.mcan = NULL, group.members = NULL,
+                quota.hare = FALSE, group.mcan = NULL, group.members = NULL,
                 complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
-                quiet = FALSE, digits = 3, quota.hare = FALSE, ...) {
+                quiet = FALSE, digits = 3, ...) {
 	###################################
 	# Single transferable vote.
 	# Adopted from Bernard Silverman's code.
@@ -130,11 +130,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
         uij <- w * A
 		vcast <- apply(uij, 2, sum)
 		names(vcast) <- cnames
-		if(!constant.quota || count == 1)
-		# Droop and Hare test control. If true will run Hare or if false/default to Droop method
-		    if(!quota.hare == FALSE){
-		      quota <- sum(vcast)/(mcan) + eps} else {
-		      quota <- sum(vcast)/(mcan + 1) + eps}
+		if(!constant.quota || count == 1) 
+		    # Quota calculation via either Hare (quota.hare is TRUE) or Droop (FALSE) method 
+		    quota <- if(quota.hare) sum(vcast)/mcan + eps else sum(vcast)/(mcan + 1) + eps
 
 		result.quota <- c(result.quota, quota)
 		result.pref <- rbind(result.pref, vcast)

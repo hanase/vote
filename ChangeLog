@@ -1,4 +1,5 @@
 2.2-1 (5/2/2021)
+-----
 stv: Added feature to select Hare method of quota calculation (quota.hare) and 
 default remains Droop quota method (thanks to moryall).
 
