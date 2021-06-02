@@ -23,7 +23,7 @@ Count votes using the single transferable voting method, also known as ranked ch
 \usage{
 stv(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
-  group.mcan = NULL, group.members = NULL,
+  quota.hare = FALSE, group.mcan = NULL, group.members = NULL,
   complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
   quiet = FALSE, digits = 3, \dots)
 
@@ -49,12 +49,14 @@ ordered.preferences(vmat)
 \arguments{
   \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. See below for more details.}
   \item{mcan}{Number of candidates to be elected. By default it is half the number of candidates standing.}
-  \item{eps}{Value added to the quota. I.e. the STV quota is computed as \cr
+  \item{eps}{Value added to the quota. I.e. the STV default Droop quota is computed as \cr
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
   \item{equal.ranking}{If \code{TRUE} equal preferences are allowed, see below.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
   \item{ties}{Method used to break ties. By default the forwards tie-breaking is used (\dQuote{f}). Value \dQuote{b} invokes the backwards tie-breaking method, see O'Neill (2004).}
   \item{constant.quota}{Logical determining if the quota should be kept constant for all counts.}
+  \item{quota.hare}{Changes quota calculation method from (default) Droop (\code{FALSE}) to Hare (\code{TRUE}). STV Hare quota method is computed as \cr
+    \code{number_of_first_preferences/number_of_seats + eps}. The actual Hare formula would entail \code{eps = 0}.}
   \item{group.mcan}{Minimum number of candidates to be elected who are members of a given group. I.e., number of reserved seats for a subset of candidates defined by the \code{group.members} argument.}
   \item{group.members}{Vector of candidate names or indices who are eligible for reserved seats given by \code{group.mcan}. If it is a vector of indices, the order of candidates is assumed to correspond to the columns of \code{votes}.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}

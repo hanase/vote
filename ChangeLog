@@ -1,3 +1,8 @@
+2.2-1 (5/31/2021)
+-----
+stv: Added feature to select Hare method of quota calculation (quota.hare) and 
+default remains Droop quota method (thanks to moryall).
+
 2.2-0 (2/11/2021)
 -----
 stv: Added feature of reserving seats for a subgroup (arguments group.mcan, group.members)

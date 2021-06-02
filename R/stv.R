@@ -1,6 +1,6 @@
 stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
-                group.mcan = NULL, group.members = NULL,
+                quota.hare = FALSE, group.mcan = NULL, group.members = NULL,
                 complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
 	###################################
@@ -130,8 +130,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
         uij <- w * A
 		vcast <- apply(uij, 2, sum)
 		names(vcast) <- cnames
-		if(!constant.quota || count == 1)
-		    quota <- sum(vcast)/(mcan + 1) + eps
+		if(!constant.quota || count == 1) 
+		    # Quota calculation via either Hare (quota.hare is TRUE) or Droop (FALSE) method 
+		    quota <- if(quota.hare) sum(vcast)/mcan + eps else sum(vcast)/(mcan + 1) + eps
+
 		result.quota <- c(result.quota, quota)
 		result.pref <- rbind(result.pref, vcast)
 		result.elect <- rbind(result.elect, rep(0,nc))
