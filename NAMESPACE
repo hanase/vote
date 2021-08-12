@@ -16,6 +16,7 @@ export(
     tworound.runoff,
     invalid.votes,
     valid.votes,
+    corrected.votes,
     correct.ranking,
     view,
     complete.ranking,

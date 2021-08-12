@@ -38,7 +38,7 @@ Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Singl
 
 \examples{
 data(ims_election)
-res <- count.votes(ims_election, method = "stv", mcan = 5)
+res <- count.votes(ims_election, method = "stv", nseats = 5)
 summary(res)
 
 # View invalid votes

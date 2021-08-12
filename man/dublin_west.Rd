@@ -29,7 +29,7 @@ head(dublin_west)
 
 \dontrun{
 # produce similar results as in the Wikipedia link above
-dwstv <- stv(dublin_west, mcan = 3, eps = 1, constant.quota = TRUE)
+dwstv <- stv(dublin_west, nseats = 3, eps = 1, constant.quota = TRUE)
 
 # plot results
 plot(dwstv)
