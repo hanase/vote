@@ -2,7 +2,7 @@
 -----
 mcan argument renamed to nseats and group.mcan renamed to group.nseats.
 
-Added argument 'allow.partial.votes' to stv and 'partial' to correct.ranking to allow 
+Added argument 'invalid.partial' to stv and 'partial' to correct.ranking to allow 
 for partial correction of ballots.
 
 2.2-1 (5/31/2021)

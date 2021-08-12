@@ -1,7 +1,7 @@
 stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
                 quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
-                complete.ranking = FALSE, allow.partial.votes = FALSE,
+                complete.ranking = FALSE, invalid.partial = FALSE,
                 verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
 	###################################
@@ -95,7 +95,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	if(equal.ranking) 
 	    corvotes <- correct.ranking(votes, partial = FALSE, quiet = quiet)
 	else {
-	    if(allow.partial.votes)
+	    if(invalid.partial)
 	        corvotes <- correct.ranking(votes, partial = TRUE, quiet = quiet)
 	}
 	corrected <- which(rowSums(corvotes != votes) > 0)
