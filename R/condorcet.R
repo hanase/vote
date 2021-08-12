@@ -19,13 +19,15 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     nc <- ncol(votes)
     cnames <- colnames(votes)
     
-    corrected.votes <- NULL
     corvotes <- correct.ranking(votes, quiet = quiet)
-    corrected <- which(rowSums(corvotes != votes) > 0)
+
+    x <- check.votes(corvotes, "condorcet", quiet = quiet)
+    
+    corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
+    corrected.votes <- NULL
     if(length(corrected) > 0) corrected.votes <- list(original = votes[corrected,], new = corvotes[corrected, ], 
                                                       index = as.numeric(corrected))
     
-    x <- check.votes(corvotes, "condorcet", quiet = quiet)
     check.nseats(1, ncol(x))
     x2 <- x
     x2[x2 == 0] <- max(x2) + 1 # give not-ranked candidates the worst ranking

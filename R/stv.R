@@ -98,12 +98,12 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	    if(invalid.partial)
 	        corvotes <- correct.ranking(votes, partial = TRUE, quiet = quiet)
 	}
-	corrected <- which(rowSums(corvotes != votes) > 0)
+    x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
+    
+	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
 	if(length(corrected) > 0) corrected.votes <- list(original = votes[corrected,], new = corvotes[corrected, ], 
 	                                                  index = as.numeric(corrected))
-
-    x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
-	
+    
 	nvotes <- nrow(x)
 	if(is.null(nvotes)) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)

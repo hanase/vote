@@ -77,7 +77,6 @@ prepare.votes <- function(data, fsep="\n") {
   return(x)
 }
 
-
 correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
   do.rank <- function(x){
     res <- rep(0, length(x))
@@ -85,7 +84,6 @@ correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
     res
   }
   do.partial <- function(x) {
-    if(any(! (x %in% 0:length(x))) || ! 1 %in% x) return(x) # this will be completely invalidated later
     d <- diff(sort(c(0, x))) # handle gaps in ranking
     if(any(d > 1)) {
       r <- x[names(d[d > 1][1])]
@@ -97,7 +95,7 @@ correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
   }
   if(partial) {
     fct <- do.partial
-    wrn <- "partially corrected"
+    wrn <- "partially corrected (some may be still invalid)"
   } else {
     fct <- do.rank
     wrn <- "corrected to comply with the required format"
