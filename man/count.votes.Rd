@@ -31,7 +31,9 @@ corrected.votes(object)
 \value{
 	Depending which method is used, \code{count.votes} returns an object of class \code{\link{vote.plurality}}, \code{\link{vote.approval}}, \code{\link{vote.stv}}, \code{\link{vote.score}},  \code{\link{vote.condorcet}}, or \code{\link{vote.tworound.runoff}}.
 	
-	Functions \code{valid.votes} and \code{invalid.votes} return a subset of the input data with valid records and invalid records, respectively. Function \code{corrected.votes} can be used when votes are automatically corrected (as in \code{\link{stv}} and \code{\link{condorcet}}). It returns a list with the uncorrected votes, the corrected votes, and its indices within the original votes dataset.
+	Functions \code{valid.votes} and \code{invalid.votes} return a subset of the input data with valid records and invalid records, respectively. 
+	
+	Function \code{corrected.votes} can be used when votes are automatically corrected (as in \code{\link{stv}} and \code{\link{condorcet}}). It returns a list with the uncorrected votes (item \code{original}), the corrected votes (item \code{new}), and its indices within the original votes dataset (item \code{index}).
 }
 
 \author{
