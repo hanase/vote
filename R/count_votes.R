@@ -29,3 +29,7 @@ invalid.votes <- function(object) {
 valid.votes <- function(object) {
   return(object$data)
 }
+
+corrected.votes <- function(object) {
+  return(object$corrected.votes)
+}

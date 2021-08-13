@@ -1,7 +1,8 @@
-stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE, 
+stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
-                quota.hare = FALSE, group.mcan = NULL, group.members = NULL,
-                complete.ranking = FALSE, verbose = FALSE, seed = 1234, 
+                quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
+                complete.ranking = FALSE, invalid.partial = FALSE,
+                verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
 	###################################
 	# Single transferable vote.
@@ -17,9 +18,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	# votes are to be read. A tab delimited file produced by excel
 	# will be in the right format, with the candidate names in the first row.
 	#
-	# The argument mcan is number of candidates to be elected.
+	# The argument nseats is number of candidates to be elected.
 	#
-	# If mcan is not supplied it will be assumed that the number of candidates
+	# If nseats is not supplied it will be assumed that the number of candidates
 	# to be elected is half the number of candidates standing.
 	#
 	# If verbose=T, the progress of the count will be printed
@@ -45,19 +46,19 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	nc <- ncol(votes)
 	cnames <- colnames(votes)
 	
-	mcan <- check.nseats(mcan, nc, default=floor(nc/2))
+	nseats <- check.nseats(nseats, nc, default=floor(nc/2), ...)
 	
 	# check groups (if used)
 	use.marking <- FALSE
-	if(!is.null(group.mcan)) { # number of candidates to be elected from a group 
-	    if(is.null(group.members)) stop("If group.mcan is given, argument group.members must be used to mark members of the group.")
-	    if(group.mcan > mcan) {
-	        warning("group.mcan must be <= mcan. Adjusting group.mcan to ", mcan, ".")
-	        group.mcan <- mcan
+	if(!is.null(group.nseats)) { # number of candidates to be elected from a group 
+	    if(is.null(group.members)) stop("If group.nseats is given, argument group.members must be used to mark members of the group.")
+	    if(group.nseats > nseats) {
+	        warning("group.nseats must be <= nseats. Adjusting group.nseats to ", nseats, ".")
+	        group.nseats <- nseats
 	    }
-	    if(length(group.members) < group.mcan) {
-	        warning("There are less group members than group.mcan. Adjusting group.mcan to ", length(group.members), ".")
-	        group.mcan <- length(group.members)
+	    if(length(group.members) < group.nseats) {
+	        warning("There are less group members than group.nseats. Adjusting group.nseats to ", length(group.members), ".")
+	        group.nseats <- length(group.members)
 	    }
 	    if(!is.numeric(group.members)) { # convert names to indices
 	        gind <- match(group.members, cnames)
@@ -71,7 +72,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	    group.members <- unique(group.members[group.members <= nc & group.members > 0])
 	    use.marking <- TRUE
 	} else{
-	    group.mcan <- 0
+	    group.nseats <- 0
 	    group.members <- c()
 	}
 	
@@ -88,10 +89,21 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	#
 	
 	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
-	if(equal.ranking) 
-	    votes <- correct.ranking(votes, quiet = quiet)
-    x <-  check.votes(votes, "stv", equal.ranking = equal.ranking, quiet = quiet)
+	corvotes <- votes
+	corrected.votes <- NULL
 	
+	if(equal.ranking) 
+	    corvotes <- correct.ranking(votes, partial = FALSE, quiet = quiet)
+	else {
+	    if(invalid.partial)
+	        corvotes <- correct.ranking(votes, partial = TRUE, quiet = quiet)
+	}
+    x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
+    
+	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
+	if(length(corrected) > 0) corrected.votes <- list(original = votes[corrected,], new = corvotes[corrected, ], 
+	                                                  index = as.numeric(corrected))
+    
 	nvotes <- nrow(x)
 	if(is.null(nvotes)) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)
@@ -103,10 +115,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 
 	if(use.marking) {
 	    if(verbose && !quiet) {
-	        cat("Number of reserved seats is", group.mcan, "\n")
+	        cat("Number of reserved seats is", group.nseats, "\n")
 	        cat("Eligible for reserved seats:",  paste(cnames[group.members], collapse = ", "), "\n")
 	    }
-	    group.mcan.orig <- group.mcan
+	    group.nseats.orig <- group.nseats
 	}
 	
 	# initialize results
@@ -120,7 +132,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	if(verbose && !quiet) cat("\nList of 1st preferences in STV counts: \n")
 	
 	count <- 0
-	while(mcan > 0) {
+	while(nseats > 0) {
 		#
 		# calculate quota and total first preference votes
 		#
@@ -132,7 +144,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		names(vcast) <- cnames
 		if(!constant.quota || count == 1) 
 		    # Quota calculation via either Hare (quota.hare is TRUE) or Droop (FALSE) method 
-		    quota <- if(quota.hare) sum(vcast)/mcan + eps else sum(vcast)/(mcan + 1) + eps
+		    quota <- if(quota.hare) sum(vcast)/nseats + eps else sum(vcast)/(nseats + 1) + eps
 
 		result.quota <- c(result.quota, quota)
 		result.pref <- rbind(result.pref, vcast)
@@ -158,10 +170,10 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		    Dm <- D
 		    Dm[-group.members] <- FALSE # set of hopeful marked candidates
 		}
-		if((vmax >= quota && !(! ic %in% group.members && mcan == group.mcan) || 
-		     (constant.quota && sum(D) <= mcan)) || # with constant.quota elected candidates may not need to reach quota
-		     (use.marking && any(ic %in% group.members) && (sum(Dm) <= group.mcan || sum(D) - sum(Dm) == 0))) { 
-		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.mcan) # if a tiebreak, choose marked candidates if needed
+		if((vmax >= quota && !(! ic %in% group.members && nseats == group.nseats) || 
+		     (constant.quota && sum(D) <= nseats)) || # with constant.quota elected candidates may not need to reach quota
+		     (use.marking && any(ic %in% group.members) && (sum(Dm) <= group.nseats || sum(D) - sum(Dm) == 0))) { 
+		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.nseats) # if a tiebreak, choose marked candidates if needed
 		        ic <- ic[ic %in% group.members]
 			if(length(ic) > 1) {# tie
 			    ic <- solve.tiebreak(tie.method, result.pref, ic, otb, elim = FALSE)
@@ -174,9 +186,9 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 			w[index] <- uij[index, ic] * surplus # update weights
 			if(equal.ranking) w[index] <- w[index]  + rowSums(uij[index, ]) - uij[index, ic]
 			# reduce number of seats available
-			mcan <- mcan - 1
+			nseats <- nseats - 1
 			if(use.marking && ic %in% group.members)
-			    group.mcan <- group.mcan - 1
+			    group.nseats <- group.nseats - 1
 			elected <- c(elected, cnames[ic])
 			result.elect[count,ic] <- 1
 			if(verbose && !quiet) {
@@ -192,7 +204,7 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 		} else {
 			# if no candidate reaches quota, mark lowest candidate for elimination
 		    elim.select <- D
-		    if(use.marking && (mcan == group.mcan || sum(Dm) <= group.mcan)) elim.select <- elim.select & !Dm
+		    if(use.marking && (nseats == group.nseats || sum(Dm) <= group.nseats)) elim.select <- elim.select & !Dm
 			vmin <- min(vcast[elim.select])
 			ic <- (1:nc)[vcast == vmin & elim.select]
 			if(length(ic) > 1) {# tie
@@ -227,7 +239,8 @@ stv <- function(votes, mcan = NULL, eps = 0.001, equal.ranking = FALSE,
 	               elect.elim = result.elect, equal.pref.allowed = equal.ranking, 
 	               ties = translate.ties(result.ties, tie.method), data = orig.x, 
 	               invalid.votes = votes[setdiff(rownames(votes), rownames(x)),,drop = FALSE],
-	               reserved.seats = if(use.marking) group.mcan.orig else NULL,
+	               corrected.votes = corrected.votes,
+	               reserved.seats = if(use.marking) group.nseats.orig else NULL,
 	               group.members = if(use.marking) group.members else NULL),
 	               class = "vote.stv")
 	if(!quiet) print(summary(result, complete.ranking = complete.ranking, digits = digits))

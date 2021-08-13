@@ -9,7 +9,7 @@ tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...)
     nc <- ncol(votes)
     cnames <- colnames(votes)
     x <-  check.votes(votes, "tworound.runoff", quiet = quiet)
-    mcan <- check.nseats(1, ncol(x))
+    check.nseats(1, ncol(x))
     nvotes <- nrow(x)
     
     # first round
@@ -69,13 +69,13 @@ summary.vote.tworound.runoff <- function(object, ...) {
     df[, "Percent"] <- c(round(object$totals/sum(object$totals)*100, 1), 100)
     attr(df, "align") <- c(attr(df, "align"), "r")
     if(!is.null(object$totals2r)) {
-        df$ROTotal <- rep(0, nrow(df))
-        df$ROPercent <- rep(0, nrow(df))
+        df$ROffTotal <- rep(0, nrow(df))
+        df$ROffPercent <- rep(0, nrow(df))
         idx <- match(names(object$totals2r), df$Candidate)
-        df[idx, "ROTotal"] <- object$totals2r
-        df[nrow(df), "ROTotal"] <- sum(object$totals2r)
-        df[idx, "ROPercent"] <- round(object$totals2r/sum(object$totals2r)*100, 1)
-        df[nrow(df), "ROPercent"] <- 100
+        df[idx, "ROffTotal"] <- object$totals2r
+        df[nrow(df), "ROffTotal"] <- sum(object$totals2r)
+        df[idx, "ROffPercent"] <- round(object$totals2r/sum(object$totals2r)*100, 1)
+        df[nrow(df), "ROffPercent"] <- 100
         attr(df, "align") <- c(attr(df, "align"), "r", "r")
     }
     df2 <- df[, c(setdiff(colnames(df), "Elected"), "Elected")] # reshuffle the order of columns

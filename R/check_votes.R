@@ -1,3 +1,16 @@
+check.nseats <- function(nseats = NULL, ncandidates, default=1, mcan = NULL) {
+  if(!is.null(mcan)) {
+    if(is.null(nseats)) nseats <- mcan
+    warning("Argument mcan is deprecated and will be removed in the future. Use nseats instead. Using nseats = ", nseats)
+  }
+  if(is.null(nseats)) return(default)
+  if(nseats < 1 || nseats >= ncandidates) {
+    nseats <- max(1, min(nseats, ncandidates-1))
+    warning("Invalid number of candidates. Set to ", nseats)
+  }
+  return(nseats)
+}
+
 check.votes.stv <- function(record, equal.ranking = FALSE, ...) {
   if(any(! (record %in% 0:length(record))) || ! 1 %in% record) return(FALSE)
   if(!equal.ranking){
@@ -64,15 +77,33 @@ prepare.votes <- function(data, fsep="\n") {
   return(x)
 }
 
-correct.ranking <- function(votes, quiet = FALSE){
+correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
   do.rank <- function(x){
     res <- rep(0, length(x))
     res[x > 0] <- rank(x[x > 0], ties.method = "min")
     res
   }
-  v <- t(apply(votes, 1, do.rank))
+  do.partial <- function(x) {
+    d <- diff(sort(c(0, x))) # handle gaps in ranking
+    if(any(d > 1)) {
+      r <- x[names(d[d > 1][1])]
+      x[x >= r] <- 0
+    }
+    d <- which(duplicated(x) & x > 0)
+    if(length(d) > 0) x[x >= min(x[d])] <- 0
+    return(x)
+  }
+  if(partial) {
+    fct <- do.partial
+    wrn <- "partially corrected (some may be still invalid)"
+  } else {
+    fct <- do.rank
+    wrn <- "corrected to comply with the required format"
+  }
+  if(partial) do.partial else do.rank
+  v <- t(apply(votes, 1, fct))
   dif <- rowSums(v != votes)
-  if(any(dif > 0) && !quiet) warning("Votes ", paste(which(dif>0), collapse = ", "), " were corrected to comply with the required format.\n")
+  if(any(dif > 0) && !quiet) warning("Votes ", paste(which(dif>0), collapse = ", "), " were ", wrn, ".\n")
   colnames(v) <- colnames(votes)
   rownames(v) <- rownames(votes)
   return(v)

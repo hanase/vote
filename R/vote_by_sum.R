@@ -1,9 +1,9 @@
-approval <- function(votes, mcan=1, fsep='\t', quiet = FALSE, ...) {
+approval <- function(votes, nseats = 1, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   x <- check.votes(votes, "approval", quiet = quiet)
-  mcan <- check.nseats(mcan, ncol(x))
+  nseats <- check.nseats(nseats, ncol(x), ...)
   res <- sum.votes(x)
-  elected <- names(rev(sort(res))[1:mcan])
+  elected <- names(rev(sort(res))[1:nseats])
   result <- structure(list(elected=elected, totals=res, data=x,
   					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
   					class="vote.approval")
@@ -11,12 +11,12 @@ approval <- function(votes, mcan=1, fsep='\t', quiet = FALSE, ...) {
   invisible(result)
 }
 
-plurality <- function(votes, mcan=1, fsep='\t', quiet = FALSE, ...) {
+plurality <- function(votes, nseats=1, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   x <- check.votes(votes, "plurality", quiet = quiet)
-  mcan <- check.nseats(mcan, ncol(x))
+  nseats <- check.nseats(nseats, ncol(x), ...)
   res <- sum.votes(x)
-  elected <- names(rev(sort(res))[1:mcan])
+  elected <- names(rev(sort(res))[1:nseats])
   result <- structure(list(elected=elected, totals=res, data=x,
               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
               class="vote.plurality")
@@ -24,16 +24,16 @@ plurality <- function(votes, mcan=1, fsep='\t', quiet = FALSE, ...) {
   invisible(result)
 }
 
-score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', quiet = FALSE, ...) {
+score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   if(is.null(max.score) || max.score < 1) {
     max.score <- max(votes)
     warning("Invalid max.score. Set to observed maximum: ", max.score)
   }
   x <- check.votes(votes, "score", max.score, quiet = quiet)
-  mcan <- check.nseats(mcan, ncol(x))
+  nseats <- check.nseats(nseats, ncol(x), ...)
   res <- sum.votes(x)
-  elected <- names(sort(res, decreasing=larger.wins)[1:mcan])
+  elected <- names(sort(res, decreasing=larger.wins)[1:nseats])
   result <- structure(list(elected=elected, totals=res, larger.wins=larger.wins,
                   data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
                   class="vote.score")
@@ -44,15 +44,6 @@ score <- function(votes, mcan=1, max.score=NULL, larger.wins=TRUE, fsep='\t', qu
 sum.votes <- function(votes) {
   vtot <- apply(votes, 2, sum)
   return (vtot)
-}
-
-check.nseats <- function(nseats, ncandidates, default=1) {
-	if(is.null(nseats)) return(default)
-	if(nseats < 1 || nseats >= ncandidates) {
-		nseats <- max(1, min(nseats, ncandidates-1))
-		warning("Invalid number of candidates. Set to ", nseats)
-	}
-	return(nseats)
 }
 
 .summary.vote <- function(object, larger.wins=TRUE, reorder = TRUE) {

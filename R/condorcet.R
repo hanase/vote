@@ -18,8 +18,17 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     votes <- prepare.votes(votes, fsep=fsep)
     nc <- ncol(votes)
     cnames <- colnames(votes)
-    x <- check.votes(correct.ranking(votes, quiet = quiet), "condorcet", quiet = quiet)
-    mcan <- check.nseats(1, ncol(x))
+    
+    corvotes <- correct.ranking(votes, quiet = quiet)
+
+    x <- check.votes(corvotes, "condorcet", quiet = quiet)
+    
+    corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
+    corrected.votes <- NULL
+    if(length(corrected) > 0) corrected.votes <- list(original = votes[corrected,], new = corvotes[corrected, ], 
+                                                      index = as.numeric(corrected))
+    
+    check.nseats(1, ncol(x))
     x2 <- x
     x2[x2 == 0] <- max(x2) + 1 # give not-ranked candidates the worst ranking
     points <- compute.wins(x2, nc, cnames)
@@ -63,6 +72,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
     result <- structure(list(elected = if(sum(cdc.winner) > 0) cnames[which(cdc.winner)] else NULL, 
                              totals = points, data = x,
                              invalid.votes = votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE],
+                             corrected.votes = corrected.votes,
                              loser = if(sum(cdc.loser) > 0) cnames[which(cdc.loser)] else NULL,
                              runoff.winner = if(length(runoff.winner) > 0) runoff.winner else NULL, 
                              runoff.participants = ro.part.first), 

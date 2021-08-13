@@ -1,3 +1,12 @@
+2.3-0 (8/12/2021)
+-----
+mcan argument renamed to nseats and group.mcan renamed to group.nseats.
+
+Added argument 'invalid.partial' to stv and 'partial' to correct.ranking to allow 
+for partial correction of ballots.
+
+Added function corrected.votes.
+
 2.2-1 (5/31/2021)
 -----
 stv: Added feature to select Hare method of quota calculation (quota.hare) and 
