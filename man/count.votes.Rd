@@ -8,7 +8,7 @@
 Count Votes
 }
 \description{
-Count votes using one of five methods. View valid and invalid ballots.
+Count votes using one of five methods. View valid, invalid and corrected ballots.
 }
 \usage{
 count.votes(votes, method = c("auto", "plurality", "approval", "stv", 
@@ -55,6 +55,8 @@ res <- count.votes(ims_score, method = "score", max.score = 8)
 head(invalid.votes(res))
 
 summary(res)
+
+# For a corrected.votes() example see ?stv
 }
 
 \keyword{ tools }% use one of  RShowDoc("KEYWORDS")

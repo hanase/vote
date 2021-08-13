@@ -25,8 +25,7 @@ stv(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
   quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
   complete.ranking = FALSE, invalid.partial = FALSE,
-  verbose = FALSE, seed = 1234, 
-  quiet = FALSE, digits = 3, \dots)
+  verbose = FALSE, seed = 1234, quiet = FALSE, digits = 3, \dots)
 
 \method{summary}{vote.stv}(object, \dots, complete.ranking = FALSE, digits = 3)
 
@@ -84,7 +83,7 @@ The input data \code{votes} is structured as follows: Row \eqn{i} contains the p
 
 By default the preferences are not allowed to contain duplicates per vote. However, if the argument \code{equal.ranking} is set to \code{TRUE}, votes are allowed to have the same ranking for multiple candidates. The desired format is such that for each preference \eqn{i} that does not have any duplicate, there must be exactly \eqn{i-1} preferences \eqn{j} with \eqn{0 < j < i}. For example, valid ordered preferences are \eqn{1,1,3,4,\dots}, or \eqn{1,2,3,3,3,6,\dots}, but NOT \eqn{1,1,2,3,\dots}, or NOT \eqn{1,2,3,3,3,5,6,\dots}. If the data contain such invalid votes, they are automatically corrected and a warning is issued by calling the \code{correct.ranking} function. 
 
-If equal ranking is not alowed (\code{equal.ranking = FALSE}), the argument \code{invalid.partial} can be used to make ballots containing duplicates or gaps between ranking partially valid. If it is \code{TRUE}, a ballot is considered valid up to a preference that is not valid. For example, \eqn{1,2,3,4,4,6} or \eqn{1,2,3,5,6,7} would be both converted into \eqn{1,2,3,0,0,0}. 
+If equal ranking is not alowed (\code{equal.ranking = FALSE}), the argument \code{invalid.partial} can be used to make ballots containing duplicates or gaps partially valid. If it is \code{TRUE}, a ballot is considered valid up to a preference that is in normal case not allowed. For example, ballots \eqn{1,2,3,4,4,6} or \eqn{1,2,3,5,6,7} would be both converted into \eqn{1,2,3,0,0,0}, because the ballots contain valid ranking only up to the third preference. 
 
 The \code{correct.ranking} function does the above corrections for all records, regardless if they contain duplicates or not. Its argument \code{partial} determines if ballots are partially set to 0 (\code{TRUE}), or if it is complete re-ranking, as allowed when \code{equal.ranking = TRUE}. It can either be used by calling it explicitely, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE} or \code{invalid.partial = TRUE}. The function is also called from within the \code{\link{condorcet}} function. The \code{remove.candidate} function removes the given candidate(s) and adjusts the ranked votes accordingly by calling the \code{correct.ranking} function.
 
@@ -108,6 +107,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{ties}{Character vector indicating if and what tie-break happened in each count. Possible values: \dQuote{} (no tie-break), \dQuote{f} (forward tie-breaking method only), \dQuote{fo} (forward method and ordered method), \dQuote{fos} (forward method and ordered method and sampling). If the backwards tie-breaking method is used, these values are \dQuote{b}, \dQuote{bo} and \dQuote{bos}.}
 \item{data}{Input data (possibly corrected) with invalid votes removed.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
+\item{corrected.votes}{List containing data about corrected votes if any. It has three elements, \code{original} (matrix of the raw votes that were corrected), \code{new} (the corrected values), \code{index} (index of those votes within the input \code{votes} dataset).}
 \item{reserved.seats}{Number of reserved seats (\code{group.nseats}), or \code{NULL} if none.}
 \item{group.members}{Vector of candidates eligible for reserved seats, or \code{NULL} if none.}
 
@@ -133,7 +133,7 @@ R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single T
 
 \url{https://en.wikipedia.org/wiki/Single_transferable_vote}
 
-J.C. O'Neill (2004). Tie-Breaking with the Single Transferable Vote. Voting Matters, 18, 14-17. \url{http://www.votingmatters.org.uk/ISSUE18/I18P6.PDF}
+J.C. O'Neill (2004). Tie-Breaking with the Single Transferable Vote. Voting Matters, 18, 14-17. \url{https://www.votingmatters.org.uk/ISSUE18/I18P6.PDF}
 }
 \author{
 Bernard Silverman, Hana Sevcikova, Adrian Raftery
@@ -192,6 +192,15 @@ stv(ims_election, nseats = 5, group.nseats = 2,
     
 # Example of removing candidates from original votes
 stv(remove.candidate(ims_election, c("Jasper", "Tilmann")), nseats = 5)
+
+# Example of accepting partially invalid ballots
+res <- stv(ims_election, invalid.partial = TRUE)
+
+# There are now 24 invalid votes instead of 29, 
+# because 5 were corrected (ranking before the first 
+# gap/tie is valid, after that it is 0)
+corrected.votes(res)
+invalid.votes(res)
 }
 
 \keyword{tools }% use one of  RShowDoc("KEYWORDS")
