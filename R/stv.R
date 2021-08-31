@@ -105,7 +105,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	                                                  index = as.numeric(corrected))
     
 	nvotes <- nrow(x)
-	if(is.null(nvotes)) stop("There must be more than one valid ballot to run STV.")
+	if(is.null(nvotes) || nvotes == 0) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)
 	
 	# Create elimination ranking
