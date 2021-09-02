@@ -105,7 +105,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	                                                  index = as.numeric(corrected))
     
 	nvotes <- nrow(x)
-	if(is.null(nvotes)) stop("There must be more than one valid ballot to run STV.")
+	if(is.null(nvotes) || nvotes == 0) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)
 	
 	# Create elimination ranking
@@ -359,8 +359,12 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   df <- data.frame(matrix(NA, nrow=ncol(object$preferences)+4, ncol=2*ncounts-1),
                    stringsAsFactors = FALSE)
   rownames(df) <- c("Quota", colnames(object$preferences), "Tie-breaks", "Elected", "Eliminated")
-  colnames(df) <- c(1, paste0(rep(2:ncounts, each=2), c("-trans", "")))
-  idxcols <- c(1, seq(3,ncol(df), by=2))
+  colnames(df)[1] <- 1
+  idxcols <- 1
+  if(ncounts > 1) {
+    colnames(df)[2:ncol(df)] <- paste0(rep(2:ncounts, each=2), c("-trans", ""))
+    idxcols <- c(idxcols, seq(3,ncol(df), by=2))
+  }
   df["Quota", idxcols] <- object$quotas
   df[2:(nrow(df)-3), idxcols] <- t(object$preferences)
   # calculate transfers
@@ -368,11 +372,13 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   # remove quotas for winners and compute difference
   where.winner <- which(rowSums(object$elect.elim==1)==1)
   pref[where.winner,] <- pref[where.winner,] - object$elect.elim[where.winner,]*object$quotas[where.winner]
-  tmp <- t(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),])
-  if(nrow(tmp) == 1) tmp <- as.numeric(tmp) # because of R weirdness with vectors and matrices (when there is just one round)
-  df[2:(nrow(df)-3), seq(2,ncol(df), by=2)] <- tmp
+  if(ncounts > 1) {
+    tmp <- t(object$preferences[2:nrow(object$preferences),] - pref[1:(nrow(pref)-1),])
+    if(nrow(tmp) == 1) tmp <- as.numeric(tmp) # because of R weirdness with vectors and matrices (when there are just two counts)
+    df[2:(nrow(df)-3), seq(2,ncol(df), by=2)] <- tmp
+  }
   # format the right number of digits
-  df[1:(nrow(df)-3),] <- apply(df[1:(nrow(df)-3),], 2, 
+  df[1:(nrow(df)-3),] <- apply(df[1:(nrow(df)-3),, drop = FALSE], 2, 
                                function(d) 
                                    ifelse(!is.na(d), 
                                         format(round(d, digits), 
@@ -398,7 +404,7 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   }
   if(any(object$ties != "")) 
       df["Tie-breaks", seq(1, ncol(df), by = 2)] <- object$ties
-  else df <- df[-which(rownames(df) == "Tie-breaks"),]
+  else df <- df[-which(rownames(df) == "Tie-breaks"),, drop = FALSE]
   if(!is.null(object$reserved.seats))
       rownames(df)[object$group.members + 1] <- paste0(rownames(df)[object$group.members + 1], "*")
       

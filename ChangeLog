@@ -1,3 +1,7 @@
+2.3-1 (8/30/2021)
+-----
+Fixed a bug in stv() related to cases with 1 count only (thanks to Walter Ambrosius)
+
 2.3-0 (8/12/2021)
 -----
 mcan argument renamed to nseats and group.mcan renamed to group.nseats.
