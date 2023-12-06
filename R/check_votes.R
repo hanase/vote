@@ -118,3 +118,28 @@ remove.candidate <- function(votes, can, quiet = TRUE){
     votes <- votes[,!colnames(votes) %in% can]
   return(correct.ranking(votes, quiet = quiet))
 }
+
+impute.negatives <- function(votes, equal.ranking = FALSE, quiet = TRUE){
+  cans <- apply(votes, 2, function(x) any(x < 0))
+  voters.with.conflict <- apply(votes, 1, function(x) any(x < 0))
+  if(length(cans) == 0){
+    if(!quiet) cat("\nNothing to impute.")
+    return(votes)
+  }
+  votes[votes < 0] <- NA
+  impvalues <- apply(votes, 2, median, na.rm = TRUE) # ranks to impute 
+  for(i in which(voters.with.conflict)){
+    where.to.impute <- which(is.na(votes[i, ]))
+    ranks.to.impute <- impvalues[where.to.impute]
+    for(ocan in order(ranks.to.impute)){
+      ranks.to.shift <- !is.na(votes[i, ]) & votes[i, ] >= round(ranks.to.impute[ocan])
+      votes[i, ranks.to.shift] <- votes[i, ranks.to.shift] + 1
+      votes[i, where.to.impute[ocan]] <- round(ranks.to.impute[ocan])
+    }
+  }
+  if(!quiet) cat("\nMedian rankings of", paste(round(impvalues[cans], 1), collapse = ", "), "for candidates ", 
+                 paste(colnames(votes)[cans], collapse = ", "), 
+                   "was imputed into", sum(voters.with.conflict), "vote(s).\n")
+
+  return(votes)
+}
