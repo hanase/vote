@@ -41,7 +41,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-	  
+
       - uses: r-lib/actions/setup-pandoc@master
 
       - uses: r-lib/actions/setup-r-dependencies@master
@@ -54,7 +54,7 @@ jobs:
         if: always()
         run: find check -name 'testthat.Rout*' -exec cat '{}' \; || true
         shell: bash
-	
+
       - name: Upload check results
         if: failure()
         uses: actions/upload-artifact@main
