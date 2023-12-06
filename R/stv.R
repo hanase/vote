@@ -184,7 +184,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 			surplus <- if(vmax > quota) (vmax - quota)/vmax else 0
 			index <- (x[, ic] == 1) # ballots where ic has the first preference
 			w[index] <- uij[index, ic] * surplus # update weights
-			if(equal.ranking) w[index] <- w[index]  + rowSums(uij[index, ]) - uij[index, ic]
+			if(equal.ranking) w[index] <- w[index]  + rowSums(uij[index, , drop = FALSE]) - uij[index, ic]
 			# reduce number of seats available
 			nseats <- nseats - 1
 			if(use.marking && ic %in% group.members)

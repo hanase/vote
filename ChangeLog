@@ -1,3 +1,7 @@
+2.3-2 (2/4/2022)
+-----
+Fixed a bug in stv() related to equal ranking and non-overlapping votes.
+
 2.3-1 (8/30/2021)
 -----
 Fixed a bug in stv() related to cases with 1 count only (thanks to Walter Ambrosius)
