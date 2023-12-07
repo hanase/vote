@@ -118,7 +118,7 @@ remove.candidate <- function(votes, can, quiet = TRUE){
   return(correct.ranking(votes, quiet = quiet))
 }
 
-impute.negatives <- function(votes, equal.ranking = FALSE, quiet = TRUE){
+impute.ranking <- function(votes, equal.ranking = FALSE, quiet = TRUE){
   median.rank.for.zeros <- function(x){
     max.rank <- sum(x != 0)
     if(max.rank == length(x)) return(x)
@@ -132,39 +132,40 @@ impute.negatives <- function(votes, equal.ranking = FALSE, quiet = TRUE){
     if(!quiet) cat("\nNothing to impute.")
     return(votes)
   }
-  # fill in median rank for all non-used ranks, i.e. 0 ranks
+  # fill in the median rank for all non-used ranks, i.e. 0 ranks
   votes.for.imp <- t(apply(votes, 1, median.rank.for.zeros))
-  votes.for.imp[votes.for.imp < 0] <- NA
-  # ranks to impute 
+  votes.for.imp[votes.for.imp == -1] <- NA # set spots to impute to NA
+  
+  # rank values to impute (medians across all voters)
   impvalues <- apply(votes.for.imp, 2, median, na.rm = TRUE)
+  # compute means as well in case we need to solve ordering of duplicates
   impvalues.means <- apply(votes.for.imp, 2, mean, na.rm = TRUE)
-  if(!equal.ranking){ 
-    # we got median duplicates but equal ranking is not allowed; use mean for the ranking
-    iter <- 1
-    while(any(duplicated(impvalues[cans]))){ # it's in a loop because one reordering can cause duplicates elsewhere
-      for(d in impvalues[cans][duplicated(impvalues[cans])]){
-        which.cans <- cans[which(impvalues[cans] == d)]
-        if(iter <= ncol(votes))
-          o <- order(impvalues.means[which.cans])
-        else o <- sample(1:length(which.cans)) # if run long enough, reorder randomly
-        impvalues[which.cans] <- impvalues[which.cans] + o - 1
-      }
-      iter <- iter + 1
-    }
-  }
+  
+  # iterate over votes that need imputation
   for(i in which(voters.with.conflict)){
     where.to.impute <- which(is.na(votes.for.imp[i, ]))
     ranks.to.impute <- impvalues[where.to.impute]
-    for(ocan in order(ranks.to.impute)){
-      ranks.to.shift <- !is.na(votes.for.imp[i, ]) & votes[i, ] >= round(ranks.to.impute[ocan]) & 
-        ! seq_len(ncol(votes)) %in% where.to.impute
-      votes[i, ranks.to.shift] <- votes[i, ranks.to.shift] + 1
-      votes[i, where.to.impute[ocan]] <- as.integer(round(ranks.to.impute[ocan]))
+    can.order <- order(ranks.to.impute)
+    if(!equal.ranking && any(duplicated(ranks.to.impute))){
+        # if we got median duplicates but equal ranking is not allowed, use mean for the ordering
+        can.order <- order(impvalues.means[where.to.impute])
+    }
+    # iterate over ordered candidates
+    previous.imputed <- 0
+    for(ocan in can.order){
+        this.rank <- min(as.integer(round(ranks.to.impute[ocan])), max(votes[i, ], 0)+1)
+        if(!equal.ranking && this.rank == previous.imputed)
+            this.rank <- this.rank + 1 # avoid duplicates
+        ranks.to.shift <- !is.na(votes.for.imp[i, ]) & votes[i, ] >= this.rank & 
+            ! seq_len(ncol(votes)) %in% where.to.impute
+        votes[i, ranks.to.shift] <- votes[i, ranks.to.shift] + 1
+        votes[i, where.to.impute[ocan]] <- this.rank
+        previous.imputed <- this.rank
     }
   }
-  if(!quiet) cat("\nMedian rankings of", paste(round(impvalues[cans], 1), collapse = ", "), "for candidates", 
+  if(!quiet) cat("\nMedian ranks", paste(round(impvalues[cans], 1), collapse = ", "), "for candidate(s)", 
                  paste(colnames(votes)[cans], collapse = ", "), 
-                   "was imputed into", sum(voters.with.conflict), "vote(s).\n")
+                   "was used for imputation into", sum(voters.with.conflict), "vote(s).\n")
 
   return(votes)
 }

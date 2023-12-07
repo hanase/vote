@@ -93,7 +93,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	corrected.votes <- NULL
 	
 	if(impute.missing){
-	    to.impute <- votes < 0
+	    to.impute <- votes == -1
 	    corvotes[to.impute] <- 0
 	}
 	if(equal.ranking) 
@@ -104,7 +104,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	}
 	if(impute.missing && any(to.impute)){
 	    corvotes[to.impute] <- -1
-	    corvotes <- impute.negatives(corvotes, equal.ranking = equal.ranking, quiet = quiet)
+	    corvotes <- impute.ranking(corvotes, equal.ranking = equal.ranking, quiet = quiet)
 	    imputed <- votes
 	    imputed[] <- NA
 	    imputed[to.impute] <- corvotes[to.impute]
