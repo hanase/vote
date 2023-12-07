@@ -100,7 +100,6 @@ correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
     fct <- do.rank
     wrn <- "corrected to comply with the required format"
   }
-  if(partial) do.partial else do.rank
   v <- t(apply(votes, 1, fct))
   dif <- rowSums(v != votes)
   if(any(dif > 0) && !quiet) warning("Votes ", paste(which(dif>0), collapse = ", "), " were ", wrn, ".\n")
@@ -120,24 +119,50 @@ remove.candidate <- function(votes, can, quiet = TRUE){
 }
 
 impute.negatives <- function(votes, equal.ranking = FALSE, quiet = TRUE){
-  cans <- apply(votes, 2, function(x) any(x < 0))
+  median.rank.for.zeros <- function(x){
+    max.rank <- sum(x != 0)
+    if(max.rank == length(x)) return(x)
+    med <- median(seq(max.rank+1, by = 1, length = sum(x == 0)))
+    x[x == 0] <- med
+    return(x)
+  }
+  cans <- which(apply(votes, 2, function(x) any(x < 0)))
   voters.with.conflict <- apply(votes, 1, function(x) any(x < 0))
   if(length(cans) == 0){
     if(!quiet) cat("\nNothing to impute.")
     return(votes)
   }
-  votes[votes < 0] <- NA
-  impvalues <- apply(votes, 2, median, na.rm = TRUE) # ranks to impute 
-  for(i in which(voters.with.conflict)){
-    where.to.impute <- which(is.na(votes[i, ]))
-    ranks.to.impute <- impvalues[where.to.impute]
-    for(ocan in order(ranks.to.impute)){
-      ranks.to.shift <- !is.na(votes[i, ]) & votes[i, ] >= round(ranks.to.impute[ocan])
-      votes[i, ranks.to.shift] <- votes[i, ranks.to.shift] + 1
-      votes[i, where.to.impute[ocan]] <- round(ranks.to.impute[ocan])
+  # fill in median rank for all non-used ranks, i.e. 0 ranks
+  votes.for.imp <- t(apply(votes, 1, median.rank.for.zeros))
+  votes.for.imp[votes.for.imp < 0] <- NA
+  # ranks to impute 
+  impvalues <- apply(votes.for.imp, 2, median, na.rm = TRUE)
+  impvalues.means <- apply(votes.for.imp, 2, mean, na.rm = TRUE)
+  if(!equal.ranking){ 
+    # we got median duplicates but equal ranking is not allowed; use mean for the ranking
+    iter <- 1
+    while(any(duplicated(impvalues[cans]))){ # it's in a loop because one reordering can cause duplicates elsewhere
+      for(d in impvalues[cans][duplicated(impvalues[cans])]){
+        which.cans <- cans[which(impvalues[cans] == d)]
+        if(iter <= ncol(votes))
+          o <- order(impvalues.means[which.cans])
+        else o <- sample(1:length(which.cans)) # if run long enough, reorder randomly
+        impvalues[which.cans] <- impvalues[which.cans] + o - 1
+      }
+      iter <- iter + 1
     }
   }
-  if(!quiet) cat("\nMedian rankings of", paste(round(impvalues[cans], 1), collapse = ", "), "for candidates ", 
+  for(i in which(voters.with.conflict)){
+    where.to.impute <- which(is.na(votes.for.imp[i, ]))
+    ranks.to.impute <- impvalues[where.to.impute]
+    for(ocan in order(ranks.to.impute)){
+      ranks.to.shift <- !is.na(votes.for.imp[i, ]) & votes[i, ] >= round(ranks.to.impute[ocan]) & 
+        ! seq_len(ncol(votes)) %in% where.to.impute
+      votes[i, ranks.to.shift] <- votes[i, ranks.to.shift] + 1
+      votes[i, where.to.impute[ocan]] <- as.integer(round(ranks.to.impute[ocan]))
+    }
+  }
+  if(!quiet) cat("\nMedian rankings of", paste(round(impvalues[cans], 1), collapse = ", "), "for candidates", 
                  paste(colnames(votes)[cans], collapse = ", "), 
                    "was imputed into", sum(voters.with.conflict), "vote(s).\n")
 

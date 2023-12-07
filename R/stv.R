@@ -102,20 +102,22 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	    if(invalid.partial)
 	        corvotes <- correct.ranking(corvotes, partial = TRUE, quiet = quiet)
 	}
-	if(impute.missing){
+	if(impute.missing && any(to.impute)){
 	    corvotes[to.impute] <- -1
-	    corvotes <- impute.negatives(corvotes, quiet = quiet)
+	    corvotes <- impute.negatives(corvotes, equal.ranking = equal.ranking, quiet = quiet)
 	    imputed <- votes
 	    imputed[] <- NA
 	    imputed[to.impute] <- corvotes[to.impute]
+	    if(equal.ranking) # rerun the correction in case something got shifted out of range
+	        corvotes <- correct.ranking(corvotes, partial = FALSE, quiet = TRUE)
 	}
     x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
-    
+
 	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
 	if(length(corrected) > 0) {
 	    corrected.votes <- list(original = votes[corrected,])
-	    if(impute.missing && sum(to.impute) > 0)
-	        corrected.votes$imputed <- imputed
+	    if(impute.missing && any(to.impute))
+	        corrected.votes$imputed <- imputed[corrected,]
 	    corrected.votes <- c(corrected.votes, 
 	                         list(new = corvotes[corrected, ], 
 	                               index = as.numeric(corrected)))
