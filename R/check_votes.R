@@ -140,6 +140,7 @@ impute.ranking <- function(votes, equal.ranking = FALSE, quiet = TRUE){
   impvalues <- apply(votes.for.imp, 2, median, na.rm = TRUE)
   # compute means as well in case we need to solve ordering of duplicates
   impvalues.means <- apply(votes.for.imp, 2, mean, na.rm = TRUE)
+  skipped <- c()
   
   # iterate over votes that need imputation
   for(i in which(voters.with.conflict)){
@@ -153,9 +154,15 @@ impute.ranking <- function(votes, equal.ranking = FALSE, quiet = TRUE){
     # iterate over ordered candidates
     previous.imputed <- 0
     for(ocan in can.order){
-        this.rank <- min(as.integer(round(ranks.to.impute[ocan])), max(votes[i, ], 0)+1)
+        this.rank <- as.integer(round(ranks.to.impute[ocan]))
         if(!equal.ranking && this.rank == previous.imputed)
             this.rank <- this.rank + 1 # avoid duplicates
+        if(this.rank > sum(votes[i, ] > 0) + 1){
+            # if the imputed rank is larger than the maximum preference plus one, set it to 0
+            votes[i, where.to.impute[ocan]] <- 0
+            skipped <- c(skipped, i)
+            next
+        }
         ranks.to.shift <- !is.na(votes.for.imp[i, ]) & votes[i, ] >= this.rank & 
             ! seq_len(ncol(votes)) %in% where.to.impute
         votes[i, ranks.to.shift] <- votes[i, ranks.to.shift] + 1
@@ -163,9 +170,13 @@ impute.ranking <- function(votes, equal.ranking = FALSE, quiet = TRUE){
         previous.imputed <- this.rank
     }
   }
-  if(!quiet) cat("\nMedian ranks", paste(round(impvalues[cans], 1), collapse = ", "), "for candidate(s)", 
-                 paste(colnames(votes)[cans], collapse = ", "), 
-                   "was used for imputation into", sum(voters.with.conflict), "vote(s).\n")
-
+  if(!quiet) {
+    cat("\nMedian ranks used for imputation into", sum(voters.with.conflict), "vote(s) :\n")
+    print(data.frame(matrix(round(impvalues[cans], 1), byrow = TRUE, nrow = 1, 
+                     dimnames = list("rank", colnames(votes)[cans]))))
+    skipped <- unique(skipped)
+    if(length(skipped) > 0)
+      warning("Imputation skipped for votes ", paste(skipped, collapse = ", "), " due to non-missing preferences being too small.")
+  }
   return(votes)
 }
