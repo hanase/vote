@@ -1,4 +1,4 @@
-2.4-0 (12/07/2023)
+2.4-1 (12/08/2023)
 -----
 Added a feature into stv of imputing ranks due to for example a conflict of interests
 (stv() argument impute.missing, function impute.ranking())
