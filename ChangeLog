@@ -1,7 +1,9 @@
-2.4-1 (12/08/2023)
+2.4-1 (12/09/2023)
 -----
 Added a feature into stv of imputing ranks due to for example a conflict of interests
 (stv() argument impute.missing, function impute.ranking())
+
+Fixed bug in stv related to reserved seats (thanks to Merlise Clyde)
 
 2.3-2 (2/4/2022)
 -----

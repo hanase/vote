@@ -188,7 +188,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 		    Dm <- D
 		    Dm[-group.members] <- FALSE # set of hopeful marked candidates
 		}
-		if((vmax >= quota && !(! ic %in% group.members && nseats == group.nseats) || 
+		if((vmax >= quota && !(! any(ic %in% group.members) && nseats == group.nseats) || 
 		     (constant.quota && sum(D) <= nseats)) || # with constant.quota elected candidates may not need to reach quota
 		     (use.marking && any(ic %in% group.members) && (sum(Dm) <= group.nseats || sum(D) - sum(Dm) == 0))) { 
 		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.nseats) # if a tiebreak, choose marked candidates if needed
