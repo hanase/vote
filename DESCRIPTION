@@ -1,7 +1,7 @@
 Package: vote
 Type: Package
 Title: Election Vote Counting
-Version: 2.4-1
+Version: 2.4-2
 Date: 2023-12-09
 Author: Hana Sevcikova, Bernard Silverman, Adrian Raftery
 Maintainer: Hana Sevcikova<hanas@uw.edu>
