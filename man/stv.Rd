@@ -133,7 +133,7 @@ The \code{correct.ranking} (\code{impute.ranking}) function returns a matrix of 
 }
 
 \references{
-Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. \href{https://arxiv.org/abs/2102.05801}{arXiv:2102.05801}.
+Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. The R Journal, 13(2), 673-696. \doi{10.32614/RJ-2021-086}.
 
 R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
 

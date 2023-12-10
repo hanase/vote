@@ -1,0 +1,26 @@
+bibentry(bibtype = "Article",
+  title        = "{The vote Package: Single Transferable Vote and Other Electoral Systems in R}",
+  author       = c(person(given = c("Adrian", "E."),
+                          family = "Raftery",
+                          email = "raftery@uw.edu"),
+                    person(given = "Hana",
+                          family = "\\v{S}ev\\v{c}{\\'\\i}kov\\'{a}"),
+                    person(given = c("Bernard", "W."),
+                          family = "Silverman",
+                          email = "bernard.silverman@stats.ox.ac.uk")
+                   ),
+  journal      = "{The R Journal}",
+  year         = "2021",
+  volume       = "13",
+  number       = "2",
+  pages        = "673--696",
+  doi          = "10.32614/RJ-2021-086",
+
+  header       = "To cite vote in publications use:",
+  textVersion  =
+  paste("Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021).",
+        "The vote Package: Single Transferable Vote and Other Electoral Systems in R.",
+        "The R Journal, 13(2), 673-696.",
+        "doi:10.32614/RJ-2021-086")
+)
+

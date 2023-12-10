@@ -13,7 +13,7 @@ tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...)
     nvotes <- nrow(x)
     
     # first round
-    res <- sum.votes(x == 1)
+    res <- .sum.votes(x == 1)
     winners <- res/nvotes > 0.5
     resoff <- NULL
     coin.toss.winner <- coin.toss.runoff <- seed.set <- FALSE
@@ -43,7 +43,7 @@ tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...)
         xroff <- t(apply(xroff, 1, do.rank)) # shift ranking
         colnames(xroff) <- cnames[best]
         rownames(xroff) <- rownames(x)
-        resoff <- sum.votes(xroff == 1)
+        resoff <- .sum.votes(xroff == 1)
         res.elect <- resoff
     } else {
         res.elect <- res
