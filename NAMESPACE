@@ -5,6 +5,7 @@ importFrom("fields", "image.plot")
 import(data.table)
 importFrom("grDevices", "hcl.colors")
 importFrom("graphics", "axis", "mtext", "par", "text")
+importFrom("stats", "median")
 
 export(
     count.votes,
@@ -20,6 +21,7 @@ export(
     correct.ranking,
     view,
     complete.ranking,
+    impute.ranking,
     ordered.preferences,
     ordered.tiebreak,
     remove.candidate

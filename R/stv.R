@@ -2,7 +2,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
                 quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
                 complete.ranking = FALSE, invalid.partial = FALSE,
-                verbose = FALSE, seed = 1234, 
+                impute.missing = FALSE, verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
 	###################################
 	# Single transferable vote.
@@ -92,18 +92,36 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	corvotes <- votes
 	corrected.votes <- NULL
 	
+	if(impute.missing){
+	    to.impute <- votes == -1
+	    corvotes[to.impute] <- 0
+	}
 	if(equal.ranking) 
-	    corvotes <- correct.ranking(votes, partial = FALSE, quiet = quiet)
+	    corvotes <- correct.ranking(corvotes, partial = FALSE, quiet = quiet)
 	else {
 	    if(invalid.partial)
-	        corvotes <- correct.ranking(votes, partial = TRUE, quiet = quiet)
+	        corvotes <- correct.ranking(corvotes, partial = TRUE, quiet = quiet)
+	}
+	if(impute.missing && any(to.impute)){
+	    corvotes[to.impute] <- -1
+	    corvotes <- impute.ranking(corvotes, equal.ranking = equal.ranking, quiet = quiet)
+	    imputed <- votes
+	    imputed[] <- NA
+	    imputed[to.impute] <- corvotes[to.impute]
+	    if(equal.ranking) # rerun the correction in case something got shifted out of range
+	        corvotes <- correct.ranking(corvotes, partial = FALSE, quiet = TRUE)
 	}
     x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
-    
+
 	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
-	if(length(corrected) > 0) corrected.votes <- list(original = votes[corrected,], new = corvotes[corrected, ], 
-	                                                  index = as.numeric(corrected))
-    
+	if(length(corrected) > 0) {
+	    corrected.votes <- list(original = votes[corrected,])
+	    if(impute.missing && any(to.impute))
+	        corrected.votes$imputed <- imputed[corrected,]
+	    corrected.votes <- c(corrected.votes, 
+	                         list(new = corvotes[corrected, ], 
+	                               index = as.numeric(corrected)))
+	}
 	nvotes <- nrow(x)
 	if(is.null(nvotes) || nvotes == 0) stop("There must be more than one valid ballot to run STV.")
 	w <- rep(1, nvotes)
@@ -170,7 +188,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 		    Dm <- D
 		    Dm[-group.members] <- FALSE # set of hopeful marked candidates
 		}
-		if((vmax >= quota && !(! ic %in% group.members && nseats == group.nseats) || 
+		if((vmax >= quota && !(! any(ic %in% group.members) && nseats == group.nseats) || 
 		     (constant.quota && sum(D) <= nseats)) || # with constant.quota elected candidates may not need to reach quota
 		     (use.marking && any(ic %in% group.members) && (sum(Dm) <= group.nseats || sum(D) - sum(Dm) == 0))) { 
 		    if(use.marking && length(ic) > 1 && sum(Dm) <= group.nseats) # if a tiebreak, choose marked candidates if needed

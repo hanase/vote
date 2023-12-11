@@ -2,7 +2,7 @@ approval <- function(votes, nseats = 1, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   x <- check.votes(votes, "approval", quiet = quiet)
   nseats <- check.nseats(nseats, ncol(x), ...)
-  res <- sum.votes(x)
+  res <- .sum.votes(x)
   elected <- names(rev(sort(res))[1:nseats])
   result <- structure(list(elected=elected, totals=res, data=x,
   					invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
@@ -15,7 +15,7 @@ plurality <- function(votes, nseats=1, fsep='\t', quiet = FALSE, ...) {
   votes <- prepare.votes(votes, fsep=fsep)
   x <- check.votes(votes, "plurality", quiet = quiet)
   nseats <- check.nseats(nseats, ncol(x), ...)
-  res <- sum.votes(x)
+  res <- .sum.votes(x)
   elected <- names(rev(sort(res))[1:nseats])
   result <- structure(list(elected=elected, totals=res, data=x,
               invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
@@ -32,7 +32,7 @@ score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', 
   }
   x <- check.votes(votes, "score", max.score, quiet = quiet)
   nseats <- check.nseats(nseats, ncol(x), ...)
-  res <- sum.votes(x)
+  res <- .sum.votes(x)
   elected <- names(sort(res, decreasing=larger.wins)[1:nseats])
   result <- structure(list(elected=elected, totals=res, larger.wins=larger.wins,
                   data=x, invalid.votes=votes[setdiff(rownames(votes), rownames(x)),, drop = FALSE]), 
@@ -41,7 +41,7 @@ score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', 
   invisible(result)
 }
 
-sum.votes <- function(votes) {
+.sum.votes <- function(votes) {
   vtot <- apply(votes, 2, sum)
   return (vtot)
 }

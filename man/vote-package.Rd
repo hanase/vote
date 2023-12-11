@@ -33,7 +33,7 @@ Maintainer: Hana Sevcikova
 }
 
 \references{
-Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. \href{https://arxiv.org/abs/2102.05801}{arXiv:2102.05801}.
+Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. The R Journal, 13(2), 673-696. \doi{10.32614/RJ-2021-086}.
 }
 
 \examples{
