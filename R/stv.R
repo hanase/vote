@@ -341,8 +341,9 @@ forwards.tiebreak <- function(prefs, icans, elim = TRUE) {
     if(is.null(dim(rnk))) dim(rnk) <- c(1, length(rnk))
     i <- 0
     icv <- rep(FALSE, ncol(prefs))
-    icv[icans] <- TRUE
     while(i < nrow(rnk) && length(icans) > 1){
+        icv[] <- FALSE
+        icv[icans] <- TRUE
         i <- i + 1
         ic.rnk <- rnk[i, icans]
         icans <- which(icv & (rnk[i, ] == min(ic.rnk)))
@@ -358,8 +359,9 @@ backwards.tiebreak <- function(prefs, icans, elim = TRUE) {
     if(is.null(dim(rnk))) dim(rnk) <- c(1, length(rnk))
     i <- nrow(rnk)
     icv <- rep(FALSE, ncol(prefs))
-    icv[icans] <- TRUE
     while(i > 1 && length(icans) > 1){
+        icv[] <- FALSE
+        icv[icans] <- TRUE
         i <- i - 1
         ic.rnk <- rnk[i, icans]
         icans <- which(icv & (rnk[i, ] == min(ic.rnk)))
