@@ -1,3 +1,7 @@
+2.4-4 (03/01/2025)
+-----
+Fixed bug related to resolving tie-breaking (thanks to Juho-Ville Marttila).
+
 2.4-3 (12/09/2023)
 -----
 Added a feature into stv of imputing ranks due to for example a conflict of interests
