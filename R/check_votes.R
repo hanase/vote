@@ -51,7 +51,10 @@ check.votes <- function(x, ..., quiet = FALSE) {
   ok <- is.valid.vote(x, ...)
   if(any(!ok) && !quiet) 
     cat("Detected ", sum(!ok), "invalid votes. Number of valid votes is", sum(ok), ".\nUse invalid.votes(...) function to view discarded records.\n")
-  return(x[ok, ])
+  res <- x[ok, ]
+  if(!is.null((w <- attr(x, "weights"))))
+    attr(res, "weights") <- w[ok]
+  return(res)
 }
 
 assemble.args.for.check.score <- function(x, max.score = NULL, ...) {
@@ -63,11 +66,25 @@ assemble.args.for.check.stv <- function(x, equal.ranking = FALSE, ...) {
   return(list(equal.ranking=equal.ranking))
 }
 
-prepare.votes <- function(data, fsep="\n") {
+prepare.votes <- function(data, fsep="\n", weight.column = NULL) {
   if(is.character(data)) {
     data <- read.table(file = data, header = TRUE, sep=fsep, row.names = NULL)
   }
   x <- as.matrix(data)
+
+  cnames <- colnames(x)
+  if(!is.null(weight.column)){ # make weights an attribute of the data and remove it from the votes dataset
+    if((is.numeric(weight.column) && weight.column > ncol(x)) || (is.character(weight.column) && 
+      (is.null(cnames) || !weight.column %in% cnames))) {
+        warning("Voting data does not contain weight colmn ", weight.column, ". No weighting is applied.")
+    } else {
+      w <- x[, weight.column]
+      wind <- if(is.character(weight.column)) which(cnames == weight.column) else weight.column
+      x <- x[, -wind]
+      if(!is.null(cnames)) colnames(x) <- cnames[-wind]
+      attr(x, "weights") <- w
+    }
+  }
   x[is.na(x)] <- 0
   if(is.null(colnames(x))) {
     warning("Candidate names not supplied, dummy names used instead.")
@@ -76,6 +93,12 @@ prepare.votes <- function(data, fsep="\n") {
   rownames(x) <- 1:nrow(x)
   return(x)
 }
+
+get.vote.weights <- function(votes){
+  if(is.null((w <- attr(votes, "weights")))) return(rep(1, nrow(votes)))
+  return(w)   
+} 
+
 
 correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
   do.rank <- function(x){
@@ -105,6 +128,8 @@ correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
   if(any(dif > 0) && !quiet) warning("Votes ", paste(which(dif>0), collapse = ", "), " were ", wrn, ".\n")
   colnames(v) <- colnames(votes)
   rownames(v) <- rownames(votes)
+  if(!is.null((w <- attr(votes, "weights"))))
+    attr(v, "weights") <- w
   return(v)
 }
 

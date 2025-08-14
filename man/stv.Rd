@@ -25,9 +25,9 @@ Count votes using the single transferable voting method, also known as ranked ch
 stv(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE, 
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
   quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
-  complete.ranking = FALSE, invalid.partial = FALSE,
-  impute.missing = FALSE, verbose = FALSE, seed = 1234, 
-  quiet = FALSE, digits = 3, \dots)
+  weight.column = NULL, complete.ranking = FALSE, 
+  invalid.partial = FALSE, impute.missing = FALSE, verbose = FALSE, 
+  seed = 1234, quiet = FALSE, digits = 3, \dots)
 
 \method{summary}{vote.stv}(object, \dots, complete.ranking = FALSE, digits = 3)
 
@@ -63,6 +63,7 @@ ordered.preferences(vmat)
     \code{number_of_first_preferences/number_of_seats + eps}. The actual Hare formula would entail \code{eps = 0}.}
   \item{group.nseats}{Minimum number of candidates to be elected who are members of a given group. I.e., number of reserved seats for a subset of candidates defined by the \code{group.members} argument.}
   \item{group.members}{Vector of candidate names or indices who are eligible for reserved seats given by \code{group.nseats}. If it is a vector of indices, the order of candidates is assumed to correspond to the columns of \code{votes}.}
+  \item{weight.column}{Name of a column in the \code{votes} dataset that represent weights.  If given, a weighted STV is performed.}
   \item{impute.missing}{Logical. If \code{TRUE} and if the data contains values of \eqn{-1}, those ranks are imputed while all other ranks that are equal or larger than the imputed value are shifted.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}

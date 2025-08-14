@@ -1,6 +1,7 @@
 stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
                 quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
+                weight.column = NULL,
                 complete.ranking = FALSE, invalid.partial = FALSE,
                 impute.missing = FALSE, verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
@@ -42,7 +43,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
 	
-	votes <- prepare.votes(votes, fsep=fsep)
+	votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
 	nc <- ncol(votes)
 	cnames <- colnames(votes)
 	
@@ -111,7 +112,9 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	    if(equal.ranking) # rerun the correction in case something got shifted out of range
 	        corvotes <- correct.ranking(corvotes, partial = FALSE, quiet = TRUE)
 	}
-    x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
+	if(!is.null((w <- attr(votes, "weights"))) && is.null(attr(corvotes, "weights")))
+	    attr(corvotes, "weights") <- w
+    x <- check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
 
 	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
 	if(length(corrected) > 0) {
@@ -124,7 +127,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	}
 	nvotes <- nrow(x)
 	if(is.null(nvotes) || nvotes == 0) stop("There must be more than one valid ballot to run STV.")
-	w <- rep(1, nvotes)
+	w <- get.vote.weights(x)
 	
 	# Create elimination ranking
 	tie.method <- match.arg(ties)
