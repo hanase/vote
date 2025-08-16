@@ -10,10 +10,11 @@
     Two-Round Runoff Vote Count
 }
 \description{
-    Count votes using the two-round voting method with ranked ballots. If no candidate reaches the majority, the top two candidates go into a run-off.
+    Count votes using the two-round voting method with ranked ballots. If no candidate reaches the majority, the top two candidates go into a run-off. Votes can be weighted.
 }
 \usage{
-tworound.runoff(votes, fsep = '\t', seed = NULL, quiet = FALSE, \dots)
+tworound.runoff(votes, fsep = '\t', weight.column = NULL, 
+    seed = NULL, quiet = FALSE, \dots)
     
 \method{summary}{vote.tworound.runoff}(object, \dots)
     
@@ -23,15 +24,16 @@ tworound.runoff(votes, fsep = '\t', seed = NULL, quiet = FALSE, \dots)
 }
 
 \arguments{
-    \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. See below for more details.}
+    \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. The dataset can have an extra column containing a weight for each vote. Name of this column must be passed into the argument \code{weight.column}.}
     \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+    \item{weight.column}{Name of a column in the \code{votes} dataset that represent weights.  If given, a weighted voting is performed.}
     \item{seed}{Integer. Seed of the random number generator (RNG). Only used if there are ties either between candidates to enter the run-off, or between the two run-off contenders. If set to \code{NULL}, the RNG is not initialized.}
     \item{quiet}{If \code{TRUE} no output is printed.}
     \item{object, x}{Object of class \code{vote.tworound.runoff}.}
     \item{\dots}{Additional arguments passed to the underlying functions. For the \code{image} function, see arguments for \code{\link{image.vote.stv}}, especially \code{xpref}, \code{ypref}, \code{all.pref} and \code{proportion}.}
 }
 \details{
-    First, the number of first preferences is counted. If there is a candidate with more than 50\%, that candidate gets elected. Otherwise, there is a runoff between the top two candidates.
+    First, the number of first preferences is counted and possibly weighted if weights are given. If there is a candidate with more than 50\%, that candidate gets elected. Otherwise, there is a runoff between the top two candidates.
 
     The input data \code{votes} is structured the same way as for the \code{\link{stv}} method: Row \eqn{i} contains the preferences of voter \eqn{i} numbered \eqn{1, 2, \dots, r, 0,0,0,0}, in some order. Equal preferences are not allowed. The columns correspond to the candidates. The dimnames of the columns are the names of the candidates; if these are not supplied then the candidates are lettered A, B, C, \dots. If the dataset contains missing values (\code{NA}), they are replaced by zeros. 
     
@@ -45,7 +47,7 @@ tworound.runoff(votes, fsep = '\t', seed = NULL, quiet = FALSE, \dots)
     \item{totals2r}{Vector of total votes from the run-off (second round).}
     \item{coin.toss.winner}{\code{TRUE} if the winner was sampled between candidates with the same score, otherwise \code{FALSE}.}
     \item{coin.toss.runoff}{\code{TRUE} if the run-off contenders were sampled from candidates with the same score. Otherwise it is \code{FALSE}.}
-    \item{data}{Input data (possibly corrected) with invalid votes removed.}
+    \item{data}{Input data (possibly corrected) with invalid votes removed. Weights are attached as an attribute called \dQuote{weights}.}
     \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 }
 

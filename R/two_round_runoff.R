@@ -1,11 +1,11 @@
-tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...) {
+tworound.runoff <- function(votes, fsep = '\t', weight.column = NULL, seed = NULL, quiet = FALSE, ...) {
     do.rank <- function(x){
         res <- rep(0, length(x))
         res[x > 0] <- rank(x[x > 0], ties.method = "min")
         res
     }
     
-    votes <- prepare.votes(votes, fsep=fsep)
+    votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
     nc <- ncol(votes)
     cnames <- colnames(votes)
     x <-  check.votes(votes, "tworound.runoff", quiet = quiet)
@@ -13,7 +13,7 @@ tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...)
     nvotes <- nrow(x)
     
     # first round
-    res <- .sum.votes(x == 1)
+    res <- .sum.votes(vote.matrix.mat(x == 1, attr(x, "weights")))
     winners <- res/nvotes > 0.5
     resoff <- NULL
     coin.toss.winner <- coin.toss.runoff <- seed.set <- FALSE
@@ -40,10 +40,10 @@ tworound.runoff <- function(votes, fsep = '\t', seed = NULL, quiet = FALSE, ...)
             best[second.best] <- TRUE
         }
         xroff <- x[,cnames[best]]
-        xroff <- t(apply(xroff, 1, do.rank)) # shift ranking
-        colnames(xroff) <- cnames[best]
-        rownames(xroff) <- rownames(x)
-        resoff <- .sum.votes(xroff == 1)
+        xroff.new <- t(apply(xroff, 1, do.rank)) # shift ranking
+        colnames(xroff.new) <- cnames[best]
+        rownames(xroff.new) <- rownames(x)
+        resoff <- .sum.votes(vote.matrix.mat(xroff.new == 1, attr(xroff, "weights")))
         res.elect <- resoff
     } else {
         res.elect <- res
@@ -90,7 +90,9 @@ summary.vote.tworound.runoff <- function(object, ...) {
 
 print.summary.vote.tworound.runoff <- function(x, ...) {
     cat("\nResults of two-round-runoff voting")
+    if(attr(x, "weights.used")) cat(" (weighted)")
     cat("\n==================================")
+    if(attr(x, "weights.used")) cat("===========")
     .print.summary.vote(x, ...)
     if(attr(x, "coin.toss")["winner"])
         cat("Winner chosen by a coin toss.\n")

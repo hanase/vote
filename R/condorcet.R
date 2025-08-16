@@ -1,21 +1,22 @@
-condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
-    compare.two.candidates <- function(v1, v2) {
-        i.wins <- sum(v1 < v2)
-        j.wins <- sum(v1 > v2)
+condorcet <- function(votes, runoff = FALSE, fsep = '\t', weight.column = NULL, quiet = FALSE, ...) {
+    compare.two.candidates <- function(v1, v2, w) {
+        i.wins <- sum(w * (v1 < v2))
+        j.wins <- sum(w * (v1 > v2))
         c(i.wins > j.wins, i.wins < j.wins)
     }
     compute.wins <- function(dat, ncan, cnam){
         p <- matrix(0, ncan, ncan, dimnames = list(cnam, cnam))
+        w <- attr(dat, "weights")
         for(i in 1:(ncan-1)){
             for(j in ((i+1):ncan)){
-                pair.run <- compare.two.candidates(dat[,i], dat[,j])
+                pair.run <- compare.two.candidates(dat[,i], dat[,j], w)
                 p[i,j] <- pair.run[1]
                 p[j,i] <- pair.run[2]
             }
         }
         p
     }
-    votes <- prepare.votes(votes, fsep=fsep)
+    votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
     nc <- ncol(votes)
     cnames <- colnames(votes)
     
@@ -51,7 +52,7 @@ condorcet <- function(votes, runoff = FALSE, fsep = '\t', quiet = FALSE, ...) {
                 break 
             }
             if(sum(most.wins) == 2) { # run-off between two candidates 
-                pair.run <- compare.two.candidates(x2[,which(most.wins)[1]], x2[,which(most.wins)[2]])
+                pair.run <- compare.two.candidates(x2[,which(most.wins)[1]], x2[,which(most.wins)[2]], w = attr(x2, "weights"))
                 runoff.winner <- cand.names[which(most.wins)[which(pair.run == TRUE)]]
             } else { # run-off between more than two candidates 
                 x3 <- x2[, most.wins]
@@ -103,6 +104,7 @@ summary.vote.condorcet <- function(object, ...) {
         attr(df, "align") <- c(attr(df, "align"), "c")
     }
     attr(df, "number.of.votes") <- nrow(object$data)
+    attr(df, "weights.used") <- are.votes.weighted(object$data)
     attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
     attr(df, "number.of.candidates") <- nrow(object$totals)
     attr(df, "number.of.seats") <- length(object$elected)
@@ -117,7 +119,9 @@ summary.vote.condorcet <- function(object, ...) {
 
 print.summary.vote.condorcet <- function(x, ...) {
     cat("\nResults of Condorcet voting")
+    if(attr(x, "weights.used")) cat(" (weighted)")
     cat("\n===========================")
+    if(attr(x, "weights.used")) cat("===========")
     election.info(x)
     print(kable(x, align = attr(x, "align"), ...))
     if(is.null(attr(x, "condorcet.winner")))

@@ -24,7 +24,8 @@ export(
     impute.ranking,
     ordered.preferences,
     ordered.tiebreak,
-    remove.candidate
+    remove.candidate,
+    vote.matrix
 )
 
 # register S3 methods
@@ -51,3 +52,4 @@ S3method(view, vote.tworound.runoff)
 S3method(image, vote.tworound.runoff)
 S3method(print, summary.vote.tworound.runoff)
 S3method(complete.ranking, vote.stv)
+S3method(`[`, vote.matrix)

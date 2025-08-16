@@ -1,6 +1,8 @@
-2.4-5 (08/14/2025)
+2.5-0 (08/15/2025)
 -----
-Allow for weighted STV (via a column given by the argument "weight.column").
+Allow for weighted versions of all methods - via an additional data column. Its name 
+should be passed into the argument "weight.column", now supported by all methods
+(thanks to Aidan Bissell-Siders).
 
 2.4-4 (03/01/2025)
 -----

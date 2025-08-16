@@ -89,7 +89,12 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	# be in row (j-1) of the spreadsheet.
 	#
 	
-	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
+	if(verbose && !quiet) {
+	    cat("Number of votes cast is", nrow(votes))
+	    if(are.votes.weighted(votes))
+	        cat(" (votes are weighted)")
+	    cat("\n")
+	}
 	corvotes <- votes
 	corrected.votes <- NULL
 	
@@ -112,8 +117,8 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	    if(equal.ranking) # rerun the correction in case something got shifted out of range
 	        corvotes <- correct.ranking(corvotes, partial = FALSE, quiet = TRUE)
 	}
-	if(!is.null((w <- attr(votes, "weights"))) && is.null(attr(corvotes, "weights")))
-	    attr(corvotes, "weights") <- w
+	#if(!is.null((w <- attr(votes, "weights"))) && is.null(attr(corvotes, "weights")))
+	#    attr(corvotes, "weights") <- w
     x <- check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
 
 	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
@@ -434,6 +439,7 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   df[is.na(df)] <- ""
   class(df) <- c('summary.vote.stv', class(df))
   attr(df, "number.of.votes") <- nrow(object$data)
+  attr(df, "weights.used") <- are.votes.weighted(object$data)
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- ncol(object$preferences)
   attr(df, "number.of.seats") <- length(object$elected)
@@ -449,8 +455,10 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
 
 print.summary.vote.stv <- function(x, ...) {
   cat("\nResults of Single transferable vote")
+  if(attr(x, "weights.used")) cat(" (weighted)")
   if(attr(x, "equal.pref.allowed")) cat(" with equal preferences")
   cat("\n===================================")
+  if(attr(x, "weights.used")) cat("===========")
   if(attr(x, "equal.pref.allowed")) cat("=======================")
   election.info(x)
   if(!is.null(attr(x, "reserved.seats"))){

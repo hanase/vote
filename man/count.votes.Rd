@@ -3,6 +3,7 @@
 \alias{invalid.votes}
 \alias{valid.votes}
 \alias{corrected.votes}
+\alias{vote.matrix}
 
 \title{
 Count Votes
@@ -20,7 +21,7 @@ corrected.votes(object)
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. 
+  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. The dataset can have an extra column containing a weight for each vote. Name of this column must be passed into the argument \code{weight.column} which is supported by all methods.
 }
   \item{method}{Voting method to use. If \dQuote{auto}, the input data is passed through a checker for each of the methods and the one with the largest number of valid votes is used. In case of the same number of valid votes, it goes by their ordering in the function definition. }
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
@@ -29,7 +30,9 @@ corrected.votes(object)
 }
 
 \value{
-	Depending which method is used, \code{count.votes} returns an object of class \code{\link{vote.plurality}}, \code{\link{vote.approval}}, \code{\link{vote.stv}}, \code{\link{vote.score}},  \code{\link{vote.condorcet}}, or \code{\link{vote.tworound.runoff}}.
+	Depending which method is used, \code{count.votes} returns an object of class \code{\link{vote.plurality}}, \code{\link{vote.approval}}, \code{\link{vote.stv}}, \code{\link{vote.score}},  \code{\link{vote.condorcet}}, or \code{\link{vote.tworound.runoff}}. 
+	
+	The \code{data} component in this object contains the (possibly corrected) input dataset of votes which is an object of class \code{vote.matrix}. This is a matrix with an additional attribute \code{weights} containing a weight for each vote.
 	
 	Functions \code{valid.votes} and \code{invalid.votes} return a subset of the input data with valid records and invalid records, respectively. 
 	

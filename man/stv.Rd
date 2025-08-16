@@ -51,7 +51,7 @@ ordered.preferences(vmat)
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. See below for more details.}
+  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. The \code{stv} function allows to be a character string which is interpreted as a file name from which the votes are to be read. The \code{stv} function also allows an extra column containing a weight for each vote. Name of this column must be passed into the argument \code{weight.column}.}
   \item{nseats}{Number of candidates to be elected. By default it is half the number of candidates standing.}
   \item{eps}{Value added to the quota. I.e. the STV default Droop quota is computed as \cr
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
@@ -91,10 +91,12 @@ By default the preferences are not allowed to contain duplicates per vote. Howev
 
 If equal ranking is not alowed (\code{equal.ranking = FALSE}), the argument \code{invalid.partial} can be used to make ballots containing duplicates or gaps partially valid. If it is \code{TRUE}, a ballot is considered valid up to a preference that is in normal case not allowed. For example, ballots \eqn{1,2,3,4,4,6} or \eqn{1,2,3,5,6,7} would be both converted into \eqn{1,2,3,0,0,0}, because the ballots contain valid ranking only up to the third preference. 
 
-The \code{correct.ranking} function does the above corrections for all records, regardless if they contain duplicates or not. Its argument \code{partial} determines if ballots are partially set to 0 (\code{TRUE}), or if it is complete re-ranking, as allowed when \code{equal.ranking = TRUE}. It can either be used by calling it explicitly, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE} or \code{invalid.partial = TRUE}. The function is also called from within the \code{\link{condorcet}} function. The \code{remove.candidate} function removes the given candidate(s) and adjusts the ranked votes accordingly by calling the \code{correct.ranking} function.
+The \code{correct.ranking} function does the above corrections for all records, regardless if they contain duplicates or not. Its argument \code{partial} determines if ballots are partially set to 0 (\code{TRUE}), or if it is complete re-ranking, as allowed when \code{equal.ranking = TRUE}. It can either be used by calling it explicitly, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE} or \code{invalid.partial = TRUE}. The function is also called from within the \code{\link{condorcet}} function. The \code{remove.candidate} function removes the given candidate(s) and adjusts the ranked votes accordingly by calling the \code{correct.ranking} function. 
 
 The function allows the user to impute missing values. It can be used for example, if a voter has a conflict of interest with one or more candidates and not voting for them would unfairly decrease the chances of those candidates being elected. (Note that missing values are not to be confused with lower preferences that are not expressed.) Preferences to be imputed should be set to \eqn{-1} and the argument \code{impute.missing} to \code{TRUE}. Each such preference is imputed using the median rank value over the remaining votes. When computing the median rank across the votes, any value of zero is replaced by the median of the ranks not used in the corresponding vote. For example, for a ballot \eqn{1,2,3,0,0,0}, the three zeros are replaced by the median of \eqn{4, 5, 6}, i.e. by \eqn{5}, which is then used to compute the missing median rank. If the final imputed rank is larger than the number of non-zero preferences (e.g. if in a ballot \eqn{1,2,0,-1,0} the imputed value for the fourth candidate would be larger than 3), the preference is set to zero and a warning is issued.
 The described functionality is implemented in the \code{impute.ranking} function, which is called automatically from \code{stv} if \code{impute.missing = TRUE}. It can be used explicitly as well.
+
+Note that neither \code{correct.ranking}, \code{remove.candidate} nor \code{impute.ranking} allow a column of weights to be present in the dataset of votes. 
 
 By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O'Neill (2004). In addition, both methods are complemented by the following \dQuote{ordered} method: Prior to the STV election candidates are ordered by the number of 1st preferences. Equal ranks are resolved by moving to the number of 2nd preferences, then 3rd and so on. Remaining ties are broken by random draws. Such complete ordering is used to break any tie that cannot be resolved by the forwards or backwards method. If there is at least one tie during the processing, the output contains a row indicating in which count a tie-break happened (see the \code{ties} element in the Value section for an explanation of the symbols).
 
@@ -114,7 +116,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
 \item{equal.pref.allowed}{Input argument \code{equal.ranking}.}
 \item{ties}{Character vector indicating if and what tie-break happened in each count. Possible values: \dQuote{} (no tie-break), \dQuote{f} (forward tie-breaking method only), \dQuote{fo} (forward method and ordered method), \dQuote{fos} (forward method and ordered method and sampling). If the backwards tie-breaking method is used, these values are \dQuote{b}, \dQuote{bo} and \dQuote{bos}.}
-\item{data}{Input data (possibly corrected) with invalid votes removed.}
+\item{data}{Input data (possibly corrected) with invalid votes removed. Weights are attached as an attribute called \dQuote{weights}.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 \item{corrected.votes}{List containing data about corrected votes if any. It has three or four elements, \code{original} (matrix of the raw votes that were corrected), (optionally) \code{imputed} (imputed values if any), \code{new} (the corrected values), \code{index} (index of those votes within the input \code{votes} dataset).}
 \item{reserved.seats}{Number of reserved seats (\code{group.nseats}), or \code{NULL} if none.}
@@ -150,7 +152,7 @@ Bernard Silverman, Hana Sevcikova, Adrian Raftery
 
 
 \examples{
-# Reproducing example from Wikipedia
+# Reproducing example from Wikipedia (version from Sep 2019)
 # https://en.wikipedia.org/wiki/Single_transferable_vote#Example
 # Uses eps=1
 data(food_election)
@@ -186,6 +188,10 @@ stv(dublin_west, nseats = 3, eps = 1)}
 votes <- data.frame(C1=c(3,2,1,3), C2=c(2,1,2,4),
                     C3=c(4,3,3,1), C4=c(1,4,4,2))
 stv(votes, nseats = 2, verbose = TRUE)
+
+# Example of weighted votes
+wvotes <- cbind(votes, weight = c(1, 2, 1, 2.5))
+stv(wvotes, nseats = 2, weight.column = "weight", verbose = TRUE)
 
 # Example with equal ranking and correction
 votes <- data.frame(C1=c(3,2,1,3), C2=c(1,1,2,0),

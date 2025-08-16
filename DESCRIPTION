@@ -1,8 +1,8 @@
 Package: vote
 Type: Package
 Title: Election Vote Counting
-Version: 2.4-5
-Date: 2025-08-14
+Version: 2.5-0
+Date: 2025-08-15
 Authors@R: c(person(given = "Hana",
                       family = "Sevcikova",
                       role = c("aut", "cre"),
@@ -18,5 +18,5 @@ Description: Counting election votes and determining election results by differe
     runoff methods (Raftery et al., 2021 <doi:10.32614/RJ-2021-086>).
 Depends: R (>= 3.5.0)
 Imports: formattable, knitr, data.table, fields
-Suggests: ggplot2
+Suggests: ggplot2, testthat
 License: GPL (>=2)
