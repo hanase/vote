@@ -1,3 +1,8 @@
+2.5-1 (01/20/2026)
+-----
+Added an argument "xmin" to plot.vote.stv to be able to eliminate counts
+where no changes happen (thanks to Brendan Murphy). 
+
 2.5-0 (08/15/2025)
 -----
 Allow for weighted versions of all methods - via an additional data column. Its name 

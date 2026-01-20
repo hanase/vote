@@ -33,7 +33,7 @@ stv(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 
 \method{view}{vote.stv}(object, \dots)
 
-\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, \dots)
+\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = NULL, \dots)
 
 \method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, \dots)
 
@@ -74,6 +74,7 @@ ordered.preferences(vmat)
   \item{digits}{How many significant digits to be used in the output table.}
   \item{xlab, ylab}{Labels of the x- and y-axis.}
   \item{point.size}{Size of the points in the plot.}
+  \item{xmin}{Minimum count to appear on the plot. By default, counts start at 0.}
   \item{xpref, ypref}{Preference for the x- and y-axis, respectively, for showing the joined distribution of the votes. It is not used if \code{all.pref} is \code{TRUE}.}
   \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
   \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis, otherwise raw vote counts are shown. Only available when \code{all.pref} is \code{FALSE}.}
