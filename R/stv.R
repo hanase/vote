@@ -519,7 +519,7 @@ image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion
     }
 }
 
-plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = NULL, ...) {
+plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = 0, ...) {
     stopifnot(requireNamespace("ggplot2", quietly = TRUE))
     Count <- value <- selection <- i.value <- count.select <- Candidate <- i.Count <- NULL # to avoid warnings of the CRAN check
     # Plot evolution of the preferences
@@ -542,8 +542,8 @@ plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 
     dfl[dfe, count.select := i.Count, on = "Candidate"]
     dfl <- dfl[is.na(count.select) | Count <= count.select]
     
-    # if xmin is set, remove data prior that and change some settings for Quota annotation
-    if(!is.null(xmin)){
+    # if xmin is larger than 0, remove data prior that and change some settings for Quota annotation
+    if(xmin > 0){
         dfl <- dfl[Count >= xmin]
         dfq <- dfq[Count >= xmin]
         dfe <- dfe[Count >= xmin]
@@ -551,12 +551,11 @@ plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 
         qhjust <- "left"
         qvjust <- "bottom"
     } else {
-        xmin <- 0
         qloc <- 1
         qhjust <- "right"
         qvjust <- "center"
     }
-    #stop("")
+
     # create plots
     g <- ggplot2::ggplot(dfl, ggplot2::aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + ggplot2::geom_line()
     g <- g + ggplot2::geom_line(data = dfq, ggplot2::aes(x = as.factor(Count)), color = "black") + ggplot2::xlab(xlab) + ggplot2::ylab(ylab)

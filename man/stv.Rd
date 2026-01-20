@@ -33,7 +33,7 @@ stv(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 
 \method{view}{vote.stv}(object, \dots)
 
-\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = NULL, \dots)
+\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = 0, \dots)
 
 \method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, \dots)
 
