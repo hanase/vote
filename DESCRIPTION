@@ -1,8 +1,8 @@
 Package: vote
 Type: Package
 Title: Election Vote Counting
-Version: 2.5-1
-Date: 2026-01-20
+Version: 2.5-2
+Date: 2026-02-27
 Authors@R: c(person(given = "Hana",
                       family = "Sevcikova",
                       role = c("aut", "cre"),

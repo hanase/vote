@@ -139,7 +139,7 @@ The \code{correct.ranking} (\code{impute.ranking}) function returns a matrix of 
 \references{
 Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. The R Journal, 13(2), 673-696. \doi{10.32614/RJ-2021-086}.
 
-R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
+R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{https://electoral-reform.org.uk/latest-news-and-research/publications/how-to-conduct-an-election-by-the-single-transferable-vote-3rd-edition/}
 
 \url{https://imstat.org/elections/single-transferable-voting-system/}
 

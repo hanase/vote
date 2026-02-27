@@ -1,4 +1,4 @@
-2.5-1 (01/20/2026)
+2.5-1/2 (02/26/2026)
 -----
 Added an argument "xmin" to plot.vote.stv to be able to eliminate counts
 where no changes happen (thanks to Brendan Murphy). 
