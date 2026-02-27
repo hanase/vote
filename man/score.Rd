@@ -9,11 +9,11 @@
 Score Vote Count
 }
 \description{
-Count votes using the score (or range) method. Voters give each candidate a score, the scores are added  and the candidate(s) with the highest (or lowest) totals is/are elected.
+Count votes using the score (or range) method. Voters give each candidate a score, the scores are added and the candidate(s) with the highest (or lowest) totals is/are elected. Votes can also be weighted.
 }
 \usage{
 score(votes, nseats = 1, max.score = NULL, larger.wins = TRUE, 
-  fsep = "\t", quiet = FALSE, \dots)
+  fsep = "\t", weight.column = NULL, quiet = FALSE, \dots)
 
 \method{summary}{vote.score}(object, \dots)
 
@@ -22,11 +22,12 @@ score(votes, nseats = 1, max.score = NULL, larger.wins = TRUE,
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame containing the votes which should be numbers between 0 and \code{max.score}. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros.}
+  \item{votes}{Matrix or data frame containing the votes which should be numbers between 0 and \code{max.score}. Rows correspond to the votes, columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. Missing values (\code{NA}) are interpreted as zeros. The dataset can have an extra column containing a weight for each vote. Name of this column must be passed into the argument \code{weight.column}.}
   \item{nseats}{Number of candidates to be elected.}
   \item{max.score}{Maximum score allowed. It is used to remove invalid votes. If not given, the maximum value contained in the data is taken and thus, all non-negative votes are valid.}
   \item{larger.wins}{Logical argument indicating whether the winners are the candidates with the highest scores (default) or the lowest scores.}
   \item{fsep}{If \code{votes} is a file name, this argument gives the column separator in the file.}
+  \item{weight.column}{Name of a column in the \code{votes} dataset that represent weights.  If given, a weighted voting is performed.}
   \item{quiet}{If \code{TRUE} no output is printed.}
   \item{\dots}{Not used.}
   \item{object}{Object of class \code{vote.score}.}
@@ -37,7 +38,7 @@ Function \code{score} returns an object of class \code{vote.score} which is a li
 \item{elected}{Vector of names of the elected candidates in the order in which they were elected.}
 \item{totals}{Vector of total votes in the same order as candidates (columns) in the input data.}
 \item{larger.wins}{Input argument of the same name.}
-\item{data}{Input data with invalid votes removed.}
+\item{data}{Input data with invalid votes removed. Weights are attached as an attribute called \dQuote{weights}.}
 \item{invalid.votes}{Number of invalid votes that were removed from the original dataset.}
 }
 \references{
@@ -55,6 +56,10 @@ Hana Sevcikova, Adrian Raftery
 data(ims_score)
 score.ims <- score(ims_score, max.score = 9)
 summary(score.ims)
+
+# weighted version (assign random weight)
+wvotes <- cbind(ims_score, weight = round(runif(nrow(ims_score), 0.5, 10), 1))
+wscore.ims <- score(wvotes, max.score = 9, weight.column = "weight")
 }
 
 \keyword{ tools }% use one of  RShowDoc("KEYWORDS")

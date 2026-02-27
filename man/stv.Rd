@@ -25,15 +25,15 @@ Count votes using the single transferable voting method, also known as ranked ch
 stv(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE, 
   fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
   quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
-  complete.ranking = FALSE, invalid.partial = FALSE,
-  impute.missing = FALSE, verbose = FALSE, seed = 1234, 
-  quiet = FALSE, digits = 3, \dots)
+  weight.column = NULL, complete.ranking = FALSE, 
+  invalid.partial = FALSE, impute.missing = FALSE, verbose = FALSE, 
+  seed = 1234, quiet = FALSE, digits = 3, \dots)
 
 \method{summary}{vote.stv}(object, \dots, complete.ranking = FALSE, digits = 3)
 
 \method{view}{vote.stv}(object, \dots)
 
-\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, \dots)
+\method{plot}{vote.stv}(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = 0, \dots)
 
 \method{image}{vote.stv}(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion = TRUE, \dots)
 
@@ -51,7 +51,7 @@ ordered.preferences(vmat)
 }
 
 \arguments{
-  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. If it is a character string it is interpreted as a file name from which the votes are to be read. See below for more details.}
+  \item{votes}{Matrix or data frame containing the votes. Rows correspond to the votes,  columns correspond to the candidates. The \code{stv} function allows to be a character string which is interpreted as a file name from which the votes are to be read. The \code{stv} function also allows an extra column containing a weight for each vote. Name of this column must be passed into the argument \code{weight.column}.}
   \item{nseats}{Number of candidates to be elected. By default it is half the number of candidates standing.}
   \item{eps}{Value added to the quota. I.e. the STV default Droop quota is computed as \cr
   	\code{number_of_first_preferences/(number_of_seats + 1) + eps}.}
@@ -63,6 +63,7 @@ ordered.preferences(vmat)
     \code{number_of_first_preferences/number_of_seats + eps}. The actual Hare formula would entail \code{eps = 0}.}
   \item{group.nseats}{Minimum number of candidates to be elected who are members of a given group. I.e., number of reserved seats for a subset of candidates defined by the \code{group.members} argument.}
   \item{group.members}{Vector of candidate names or indices who are eligible for reserved seats given by \code{group.nseats}. If it is a vector of indices, the order of candidates is assumed to correspond to the columns of \code{votes}.}
+  \item{weight.column}{Name of a column in the \code{votes} dataset that represent weights.  If given, a weighted STV is performed.}
   \item{impute.missing}{Logical. If \code{TRUE} and if the data contains values of \eqn{-1}, those ranks are imputed while all other ranks that are equal or larger than the imputed value are shifted.}
   \item{verbose}{Logical. If \code{TRUE} the progress of the count will be printed.}
   \item{seed}{Integer. Seed of the random number generator. Only used if there are ties that cannot be resolved by the tie-breaking method. If set to \code{NULL}, the RNG is not initialized.}
@@ -73,6 +74,7 @@ ordered.preferences(vmat)
   \item{digits}{How many significant digits to be used in the output table.}
   \item{xlab, ylab}{Labels of the x- and y-axis.}
   \item{point.size}{Size of the points in the plot.}
+  \item{xmin}{Minimum count to appear on the plot. By default, counts start at 0.}
   \item{xpref, ypref}{Preference for the x- and y-axis, respectively, for showing the joined distribution of the votes. It is not used if \code{all.pref} is \code{TRUE}.}
   \item{all.pref}{Logical. If \code{TRUE} the marginal distribution of all preferences is shown in the image. Otherwise, the joint distribution of \code{xpref} and \code{ypref} is shown.}
   \item{proportion}{If \code{TRUE} the preferences are shown as proportions across the x-axis, otherwise raw vote counts are shown. Only available when \code{all.pref} is \code{FALSE}.}
@@ -90,10 +92,12 @@ By default the preferences are not allowed to contain duplicates per vote. Howev
 
 If equal ranking is not alowed (\code{equal.ranking = FALSE}), the argument \code{invalid.partial} can be used to make ballots containing duplicates or gaps partially valid. If it is \code{TRUE}, a ballot is considered valid up to a preference that is in normal case not allowed. For example, ballots \eqn{1,2,3,4,4,6} or \eqn{1,2,3,5,6,7} would be both converted into \eqn{1,2,3,0,0,0}, because the ballots contain valid ranking only up to the third preference. 
 
-The \code{correct.ranking} function does the above corrections for all records, regardless if they contain duplicates or not. Its argument \code{partial} determines if ballots are partially set to 0 (\code{TRUE}), or if it is complete re-ranking, as allowed when \code{equal.ranking = TRUE}. It can either be used by calling it explicitly, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE} or \code{invalid.partial = TRUE}. The function is also called from within the \code{\link{condorcet}} function. The \code{remove.candidate} function removes the given candidate(s) and adjusts the ranked votes accordingly by calling the \code{correct.ranking} function.
+The \code{correct.ranking} function does the above corrections for all records, regardless if they contain duplicates or not. Its argument \code{partial} determines if ballots are partially set to 0 (\code{TRUE}), or if it is complete re-ranking, as allowed when \code{equal.ranking = TRUE}. It can either be used by calling it explicitly, otherwise it is called by \code{stv} if \code{equal.ranking = TRUE} or \code{invalid.partial = TRUE}. The function is also called from within the \code{\link{condorcet}} function. The \code{remove.candidate} function removes the given candidate(s) and adjusts the ranked votes accordingly by calling the \code{correct.ranking} function. 
 
 The function allows the user to impute missing values. It can be used for example, if a voter has a conflict of interest with one or more candidates and not voting for them would unfairly decrease the chances of those candidates being elected. (Note that missing values are not to be confused with lower preferences that are not expressed.) Preferences to be imputed should be set to \eqn{-1} and the argument \code{impute.missing} to \code{TRUE}. Each such preference is imputed using the median rank value over the remaining votes. When computing the median rank across the votes, any value of zero is replaced by the median of the ranks not used in the corresponding vote. For example, for a ballot \eqn{1,2,3,0,0,0}, the three zeros are replaced by the median of \eqn{4, 5, 6}, i.e. by \eqn{5}, which is then used to compute the missing median rank. If the final imputed rank is larger than the number of non-zero preferences (e.g. if in a ballot \eqn{1,2,0,-1,0} the imputed value for the fourth candidate would be larger than 3), the preference is set to zero and a warning is issued.
 The described functionality is implemented in the \code{impute.ranking} function, which is called automatically from \code{stv} if \code{impute.missing = TRUE}. It can be used explicitly as well.
+
+Note that neither \code{correct.ranking}, \code{remove.candidate} nor \code{impute.ranking} allow a column of weights to be present in the dataset of votes. 
 
 By default, ties in the STV algorithm are resolved using the forwards tie-breaking method, see Newland and Briton (Section 5.2.5). Argument \code{ties} can be set to \dQuote{b} in order to use the backwards tie-breaking method, see O'Neill (2004). In addition, both methods are complemented by the following \dQuote{ordered} method: Prior to the STV election candidates are ordered by the number of 1st preferences. Equal ranks are resolved by moving to the number of 2nd preferences, then 3rd and so on. Remaining ties are broken by random draws. Such complete ordering is used to break any tie that cannot be resolved by the forwards or backwards method. If there is at least one tie during the processing, the output contains a row indicating in which count a tie-break happened (see the \code{ties} element in the Value section for an explanation of the symbols).
 
@@ -113,7 +117,7 @@ Function \code{stv} returns an object of class \code{vote.stv} which is a list w
 \item{elect.elim}{Matrix of the same shape as \code{preferences}. Value 1 means that the corresponding candidate was elected in that round; value -1 means an elimination.}
 \item{equal.pref.allowed}{Input argument \code{equal.ranking}.}
 \item{ties}{Character vector indicating if and what tie-break happened in each count. Possible values: \dQuote{} (no tie-break), \dQuote{f} (forward tie-breaking method only), \dQuote{fo} (forward method and ordered method), \dQuote{fos} (forward method and ordered method and sampling). If the backwards tie-breaking method is used, these values are \dQuote{b}, \dQuote{bo} and \dQuote{bos}.}
-\item{data}{Input data (possibly corrected) with invalid votes removed.}
+\item{data}{Input data (possibly corrected) with invalid votes removed. Weights are attached as an attribute called \dQuote{weights}.}
 \item{invalid.votes}{Matrix of invalid votes that were removed from the original dataset.}
 \item{corrected.votes}{List containing data about corrected votes if any. It has three or four elements, \code{original} (matrix of the raw votes that were corrected), (optionally) \code{imputed} (imputed values if any), \code{new} (the corrected values), \code{index} (index of those votes within the input \code{votes} dataset).}
 \item{reserved.seats}{Number of reserved seats (\code{group.nseats}), or \code{NULL} if none.}
@@ -135,7 +139,7 @@ The \code{correct.ranking} (\code{impute.ranking}) function returns a matrix of 
 \references{
 Raftery, A.E., Sevcikova, H. and Silverman, B.W. (2021). The vote Package: Single Transferable Vote and Other Electoral Systems in R. The R Journal, 13(2), 673-696. \doi{10.32614/RJ-2021-086}.
 
-R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{http://www.rosenstiel.co.uk/stvrules/index.html}
+R.A. Newland and F.S. Britton (1997). How to conduct an election by the Single Transferable Vote. ERS 3rd Edition. \url{https://electoral-reform.org.uk/latest-news-and-research/publications/how-to-conduct-an-election-by-the-single-transferable-vote-3rd-edition/}
 
 \url{https://imstat.org/elections/single-transferable-voting-system/}
 
@@ -149,7 +153,7 @@ Bernard Silverman, Hana Sevcikova, Adrian Raftery
 
 
 \examples{
-# Reproducing example from Wikipedia
+# Reproducing example from Wikipedia (version from Sep 2019)
 # https://en.wikipedia.org/wiki/Single_transferable_vote#Example
 # Uses eps=1
 data(food_election)
@@ -185,6 +189,10 @@ stv(dublin_west, nseats = 3, eps = 1)}
 votes <- data.frame(C1=c(3,2,1,3), C2=c(2,1,2,4),
                     C3=c(4,3,3,1), C4=c(1,4,4,2))
 stv(votes, nseats = 2, verbose = TRUE)
+
+# Example of weighted votes
+wvotes <- cbind(votes, weight = c(1, 2, 1, 2.5))
+stv(wvotes, nseats = 2, weight.column = "weight", verbose = TRUE)
 
 # Example with equal ranking and correction
 votes <- data.frame(C1=c(3,2,1,3), C2=c(1,1,2,0),

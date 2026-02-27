@@ -1,5 +1,5 @@
-approval <- function(votes, nseats = 1, fsep='\t', quiet = FALSE, ...) {
-  votes <- prepare.votes(votes, fsep=fsep)
+approval <- function(votes, nseats = 1, fsep='\t', weight.column = NULL, quiet = FALSE, ...) {
+  votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
   x <- check.votes(votes, "approval", quiet = quiet)
   nseats <- check.nseats(nseats, ncol(x), ...)
   res <- .sum.votes(x)
@@ -11,8 +11,8 @@ approval <- function(votes, nseats = 1, fsep='\t', quiet = FALSE, ...) {
   invisible(result)
 }
 
-plurality <- function(votes, nseats=1, fsep='\t', quiet = FALSE, ...) {
-  votes <- prepare.votes(votes, fsep=fsep)
+plurality <- function(votes, nseats=1, fsep='\t', weight.column = NULL, quiet = FALSE, ...) {
+  votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
   x <- check.votes(votes, "plurality", quiet = quiet)
   nseats <- check.nseats(nseats, ncol(x), ...)
   res <- .sum.votes(x)
@@ -24,8 +24,9 @@ plurality <- function(votes, nseats=1, fsep='\t', quiet = FALSE, ...) {
   invisible(result)
 }
 
-score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', quiet = FALSE, ...) {
-  votes <- prepare.votes(votes, fsep=fsep)
+score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', 
+                  weight.column = NULL, quiet = FALSE, ...) {
+  votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
   if(is.null(max.score) || max.score < 1) {
     max.score <- max(votes)
     warning("Invalid max.score. Set to observed maximum: ", max.score)
@@ -42,7 +43,7 @@ score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', 
 }
 
 .sum.votes <- function(votes) {
-  vtot <- apply(votes, 2, sum)
+  vtot <- apply(votes * attr(votes, "weights"), 2, sum)
   return (vtot)
 }
 
@@ -56,6 +57,7 @@ score <- function(votes, nseats=1, max.score=NULL, larger.wins=TRUE, fsep='\t', 
   rownames(df)[nrow(df)] <- "Sum"
   attr(df, "align") <- c("l", "r", "c")
   attr(df, "number.of.votes") <- nrow(object$data)
+  attr(df, "weights.used") <- are.votes.weighted(object$data)
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- length(object$totals)
   attr(df, "number.of.seats") <- length(object$elected)
@@ -84,7 +86,9 @@ election.info <- function(x) {
 
 print.summary.vote.approval <- function(x, ...) {
   cat("\nResults of Approval voting")
+  if(attr(x, "weights.used")) cat(" (weighted)")
   cat("\n==========================")
+  if(attr(x, "weights.used")) cat("===========")
   .print.summary.vote(x, ...)
 }
 
@@ -105,9 +109,11 @@ summary.vote.plurality <- function(object, ...) {
 }
 
 print.summary.vote.plurality <- function(x, ...) {
-  cat("\nResults of Plurality voting")
-  cat("\n===========================")
-  .print.summary.vote(x, ...)
+    cat("\nResults of Plurality voting")
+    if(attr(x, "weights.used")) cat(" (weighted)")
+    cat("\n===========================")
+    if(attr(x, "weights.used")) cat("===========")
+    .print.summary.vote(x, ...)
 }
 
 view.vote.plurality <- function(object, ...) 
@@ -121,9 +127,11 @@ summary.vote.score <- function(object, ...) {
 }
 
 print.summary.vote.score <- function(x, ...) {
-  cat("\nResults of Score voting")
-  cat("\n=======================")
-  .print.summary.vote(x, ...)
+    cat("\nResults of Score voting")
+    if(attr(x, "weights.used")) cat(" (weighted)")
+    cat("\n=======================")
+    if(attr(x, "weights.used")) cat("===========")
+    .print.summary.vote(x, ...)
 }
 
 view.vote.score <- function(object, ...) 

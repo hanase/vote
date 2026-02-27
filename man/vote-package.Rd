@@ -6,7 +6,7 @@
 Election Vote Counting
 }
 \description{
-Counting election votes and determining election results by different methods, including the single transferable vote (ranked choice), approval, score, plurality, condorcet and two-round runoff methods. Details about the methods and package functions can be found in Raftery et al. (2021).
+Counting election votes and determining election results by different methods, including the single transferable vote (ranked choice), approval, score, plurality, condorcet and two-round runoff methods. Details about the methods and package functions can be found in Raftery et al. (2021). Versions of all methods where votes are weighted be given weights are also implemented.
 }
 \details{
 The main function of the package is called \code{\link{count.votes}}. If no specific method is passed, it decides on the basis of the available data which method is the most appropriate. Specific methods can also be invoked explicitly. 

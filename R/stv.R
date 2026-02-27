@@ -1,6 +1,7 @@
 stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE, 
                 fsep = '\t', ties = c("f", "b"), constant.quota = FALSE,
                 quota.hare = FALSE, group.nseats = NULL, group.members = NULL,
+                weight.column = NULL,
                 complete.ranking = FALSE, invalid.partial = FALSE,
                 impute.missing = FALSE, verbose = FALSE, seed = 1234, 
                 quiet = FALSE, digits = 3, ...) {
@@ -42,7 +43,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	# Prepare by finding names of candidates and setting up
 	# vector w of vote weights and list of elected candidates
 	
-	votes <- prepare.votes(votes, fsep=fsep)
+	votes <- prepare.votes(votes, fsep=fsep, weight.column = weight.column)
 	nc <- ncol(votes)
 	cnames <- colnames(votes)
 	
@@ -88,7 +89,12 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	# be in row (j-1) of the spreadsheet.
 	#
 	
-	if(verbose && !quiet) cat("Number of votes cast is", nrow(votes), "\n")
+	if(verbose && !quiet) {
+	    cat("Number of votes cast is", nrow(votes))
+	    if(are.votes.weighted(votes))
+	        cat(" (votes are weighted)")
+	    cat("\n")
+	}
 	corvotes <- votes
 	corrected.votes <- NULL
 	
@@ -111,7 +117,9 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	    if(equal.ranking) # rerun the correction in case something got shifted out of range
 	        corvotes <- correct.ranking(corvotes, partial = FALSE, quiet = TRUE)
 	}
-    x <-  check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
+	#if(!is.null((w <- attr(votes, "weights"))) && is.null(attr(corvotes, "weights")))
+	#    attr(corvotes, "weights") <- w
+    x <- check.votes(corvotes, "stv", equal.ranking = equal.ranking, quiet = quiet)
 
 	corrected <- which(rowSums(corvotes != votes) > 0 & rownames(votes) %in% rownames(x))
 	if(length(corrected) > 0) {
@@ -124,7 +132,7 @@ stv <- function(votes, nseats = NULL, eps = 0.001, equal.ranking = FALSE,
 	}
 	nvotes <- nrow(x)
 	if(is.null(nvotes) || nvotes == 0) stop("There must be more than one valid ballot to run STV.")
-	w <- rep(1, nvotes)
+	w <- get.vote.weights(x)
 	
 	# Create elimination ranking
 	tie.method <- match.arg(ties)
@@ -431,6 +439,7 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
   df[is.na(df)] <- ""
   class(df) <- c('summary.vote.stv', class(df))
   attr(df, "number.of.votes") <- nrow(object$data)
+  attr(df, "weights.used") <- are.votes.weighted(object$data)
   attr(df, "number.of.invalid.votes") <- nrow(object$invalid.votes)
   attr(df, "number.of.candidates") <- ncol(object$preferences)
   attr(df, "number.of.seats") <- length(object$elected)
@@ -446,8 +455,10 @@ summary.vote.stv <- function(object, ..., complete.ranking = FALSE, digits = 3) 
 
 print.summary.vote.stv <- function(x, ...) {
   cat("\nResults of Single transferable vote")
+  if(attr(x, "weights.used")) cat(" (weighted)")
   if(attr(x, "equal.pref.allowed")) cat(" with equal preferences")
   cat("\n===================================")
+  if(attr(x, "weights.used")) cat("===========")
   if(attr(x, "equal.pref.allowed")) cat("=======================")
   election.info(x)
   if(!is.null(attr(x, "reserved.seats"))){
@@ -508,7 +519,7 @@ image.vote.stv <- function(x, xpref = 2, ypref = 1, all.pref = FALSE, proportion
     }
 }
 
-plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 2, ...) {
+plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 2, xmin = 0, ...) {
     stopifnot(requireNamespace("ggplot2", quietly = TRUE))
     Count <- value <- selection <- i.value <- count.select <- Candidate <- i.Count <- NULL # to avoid warnings of the CRAN check
     # Plot evolution of the preferences
@@ -531,11 +542,26 @@ plot.vote.stv <- function(x, xlab = "Count", ylab = "Preferences", point.size = 
     dfl[dfe, count.select := i.Count, on = "Candidate"]
     dfl <- dfl[is.na(count.select) | Count <= count.select]
     
+    # if xmin is larger than 0, remove data prior that and change some settings for Quota annotation
+    if(xmin > 0){
+        dfl <- dfl[Count >= xmin]
+        dfq <- dfq[Count >= xmin]
+        dfe <- dfe[Count >= xmin]
+        qloc <- xmin
+        qhjust <- "left"
+        qvjust <- "bottom"
+    } else {
+        qloc <- 1
+        qhjust <- "right"
+        qvjust <- "center"
+    }
+
     # create plots
     g <- ggplot2::ggplot(dfl, ggplot2::aes(x = as.factor(Count), y = value, color = Candidate, group = Candidate)) + ggplot2::geom_line()
     g <- g + ggplot2::geom_line(data = dfq, ggplot2::aes(x = as.factor(Count)), color = "black") + ggplot2::xlab(xlab) + ggplot2::ylab(ylab)
     g <- g + ggplot2::geom_point(data = dfe, ggplot2::aes(shape = selection), size = point.size) + ggplot2::ylim(range(0, max(dfl$value, dfq$value)))
-    g <- g + ggplot2::annotate(geom="text", x=as.factor(1), y=dfq[Count == 1, value], label="Quota", hjust = "right")
+    g <- g + ggplot2::annotate(geom="text", x=as.factor(qloc), y=dfq[Count == qloc, value], label="Quota", 
+                               hjust = qhjust, vjust = qvjust)
     g
 }
 

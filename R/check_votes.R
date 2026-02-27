@@ -63,17 +63,32 @@ assemble.args.for.check.stv <- function(x, equal.ranking = FALSE, ...) {
   return(list(equal.ranking=equal.ranking))
 }
 
-prepare.votes <- function(data, fsep="\n") {
+prepare.votes <- function(data, fsep="\n", weight.column = NULL) {
   if(is.character(data)) {
     data <- read.table(file = data, header = TRUE, sep=fsep, row.names = NULL)
   }
-  x <- as.matrix(data)
+  x <- vote.matrix(data)
+
+  cnames <- colnames(x)
+  if(!is.null(weight.column)){ # make weights an attribute of the data and remove it from the votes dataset
+    if((is.numeric(weight.column) && weight.column > ncol(x)) || (is.character(weight.column) && 
+      (is.null(cnames) || !weight.column %in% cnames))) {
+        warning("Voting data does not contain weight colmn ", weight.column, ". No weighting is applied.")
+    } else {
+      w <- as.vector(x[, weight.column])
+      wind <- if(is.character(weight.column)) which(cnames == weight.column) else weight.column
+      x <- x[, -wind]
+      if(!is.null(cnames)) colnames(x) <- cnames[-wind]
+      attr(x, "weights") <- w
+    }
+  }
   x[is.na(x)] <- 0
   if(is.null(colnames(x))) {
     warning("Candidate names not supplied, dummy names used instead.")
     colnames(x) <- LETTERS[1:ncol(x)]
   }
   rownames(x) <- 1:nrow(x)
+  names(attr(x, "weights")) <- rownames(x)
   return(x)
 }
 
@@ -105,6 +120,8 @@ correct.ranking <- function(votes, partial = FALSE, quiet = FALSE){
   if(any(dif > 0) && !quiet) warning("Votes ", paste(which(dif>0), collapse = ", "), " were ", wrn, ".\n")
   colnames(v) <- colnames(votes)
   rownames(v) <- rownames(votes)
+  if(inherits(votes, "vote.matrix"))
+    v <- vote.matrix.mat(v, attr(votes, "weights"))
   return(v)
 }
 
